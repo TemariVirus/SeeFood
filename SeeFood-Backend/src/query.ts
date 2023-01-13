@@ -1,6 +1,6 @@
 import Entity from "./db entities";
 import dbConnection from ".";
-import { QueryError, QueryResult } from "./controllers";
+import { QueryError } from "mysql2";
 
 export enum Operators {
     EQUAL = "=",
@@ -33,6 +33,10 @@ export enum UnionType {
 
 //#region Clauses
 abstract class Clause {
+    constructor() {
+        Clause.prototype.toString = this.toString;
+    }
+
     public abstract toString(): string;
 }
 
@@ -49,6 +53,34 @@ class SelectClause extends Clause {
     }
 }
 
+class InsertClause extends Clause {
+    private table: string;
+    private fields: string[];
+
+    constructor(table: typeof Entity, fields: string[]) {
+        super();
+        this.table = table.tableName;
+        this.fields = fields;
+    }
+
+    toString() {
+        return `INSERT INTO ${this.table} (${this.fields.join(",")}) VALUES (${this.fields.map(_ => "?").join(",")})`;
+    }
+}
+
+class UpdateClause extends Clause {
+    private table: string;
+
+    constructor(table: typeof Entity) {
+        super();
+        this.table = table.tableName;
+    }
+
+    toString() {
+        return `UPDATE ${this.table}`;
+    }
+}
+
 class FromClause extends Clause {
     private table: string;
 
@@ -59,6 +91,19 @@ class FromClause extends Clause {
 
     toString() {
         return `FROM ${this.table}`;
+    }
+}
+
+class SetClause extends Clause {
+    private fields: string[];
+
+    constructor(obj: object) {
+        super();
+        this.fields = Object.keys(obj);
+    }
+
+    toString() {
+        return `SET ${this.fields.map(field => `${field} = ?`).join(",")}`;
     }
 }
 
@@ -157,22 +202,62 @@ class UnionClause extends Clause {
         return this.tables.join(` ${this.unionType} `);
     }
 }
+
+class LimitClause extends Clause {
+    private limit: number;
+
+    constructor(limit: number) {
+        super();
+        this.limit = limit;
+    }
+
+    public toString(): string {
+        return `LIMIT ${this.limit}`;
+    }
+}
 //#endregion
 
+enum QueryType {
+    SELECT,
+    INSERT,
+    UPDATE,
+}
+
 export default class Query<T> {
-    private selectClause = undefined as SelectClause;
+    private type: QueryType;
+    private selectClause: SelectClause;
     private clauses = [] as Clause[];
-    private data = {} as object;
+    private data: any[];
     private alias: string;
 
+    constructor(type: QueryType) {
+        this.type = type;
+    }
+
     select(...fields: string[]) {
+        this.type = QueryType.SELECT;
         this.selectClause = new SelectClause(fields.length === 0 ? ["*"] : fields);
         return this;
     }
 
-    static from<U extends Entity>(table: U & typeof Entity) {
-        const query = new Query<U>();
-        query.clauses.push(new FromClause(table));
+    static from<T extends Entity>(table: T) {
+        const query = new Query<T>(QueryType.SELECT);
+        query.clauses.push(new FromClause(table as any));
+        return query;
+    }
+
+    static insert<T extends Entity>(table: T & typeof Entity, data: object, fields: string[] = undefined) {
+        const query = new Query<T>(QueryType.INSERT);
+        if (fields === undefined)
+            fields = Object.keys(data);
+        query.clauses.push(new InsertClause(table, fields));
+        query.data = Object.values(data);
+        return query;
+    }
+
+    static update<T extends Entity>(table: T & typeof Entity) {
+        const query = new Query<T>(QueryType.UPDATE);
+        query.clauses.push(new UpdateClause(table));
         return query;
     }
 
@@ -187,9 +272,16 @@ export default class Query<T> {
     }
 
     where(column: string, operator: Operators, value: any) {
-        if (Array.isArray(value))
+        // Escape strings with quotes
+        if (typeof value === "string")
+            value = `"${value}"`;
+
+        if (Array.isArray(value)) {
+            // Escape strings with quotes
+            value = value.map(v => typeof v === "string" ? `"${v}"` : v);
             value = `(${value.join(",")})`;
-        
+        }
+
         this.clauses.push(new WhereClause(column, operator, value));
         return this;
     }
@@ -199,44 +291,71 @@ export default class Query<T> {
         left_col: string,
         operator: Operators,
         right_col: string): Query<T & U> {
-        if (table instanceof Query) {
-            const queryTable = table.toString() + (table.alias ? ` AS ${table.alias}` : "");
-            this.clauses.push(new JoinClause(type, queryTable, left_col, operator, right_col));
-        }
+        if (table instanceof Query)
+            this.clauses.push(new JoinClause(type, table.toString(), left_col, operator, right_col));
         else
             this.clauses.push(new JoinClause(type, table.tableName, left_col, operator, right_col));
 
         return this as Query<T & U>;
     }
-    
+
     groupBy(...fields: string[]) {
         this.clauses.push(new GroupByClause(fields));
         return this;
     }
 
     static union(type: UnionType, ...queries: Query<any>[]) {
-        const query = new Query<any>();
+        const query = new Query<any>(QueryType.SELECT);
         query.clauses.push(new UnionClause(type, queries));
 
         return query;
     }
 
-    setData(data: object) {
-        this.data = data;
+    limit(limit: number) {
+        this.clauses.push(new LimitClause(limit));
         return this;
     }
-    
+
+    set(data: object) {
+        if (this.type !== QueryType.UPDATE)
+            throw new Error("Cannot call set() on a non-update query");
+
+        this.clauses.push(new SetClause(data));
+        this.setData(data);
+        return this;
+    }
+
+    setData(data: object) {
+        this.data = Object.values(data);
+        return this;
+    }
+
     as(alias: string) {
         this.alias = alias;
         return this;
     }
 
+    execute(): Promise<any> {
+        console.log(this.toString());
+        return new Promise((resolve, _) => dbConnection.query(this.toString(), this.data, (err, result) => resolve(err ?? result)));
+    }
+
     toArray(): Promise<QueryError | T[]> {
+        if (this.type !== QueryType.SELECT)
+            throw new Error("Cannot call toArray() on a non-select query");
+
         console.log(this.toString());
         return new Promise((resolve, _) => dbConnection.query(this.toString(), this.data, (err, result) => resolve(err ?? result as T[])));
     }
 
     toString() {
-        return `(${this.selectClause ? this.selectClause + " " : ""}${this.clauses.map(clause => clause.toString()).join(" ")})`;
+        if (this.type === QueryType.SELECT) {
+            const clauses = (this.selectClause ? [this.selectClause] : [] as Clause[]).concat(this.clauses);
+            return `(${clauses.join(" ")})${this.alias ? ` AS ${this.alias}` : ""}`;
+        }
+        else if (this.type === QueryType.INSERT)
+            return `${this.clauses[0]}`;
+        else if (this.type === QueryType.UPDATE)
+            return `${this.clauses.join(" ")}`;
     }
 }
