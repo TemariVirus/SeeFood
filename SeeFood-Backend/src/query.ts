@@ -81,6 +81,16 @@ class UpdateClause extends Clause {
     }
 }
 
+class DeleteClause extends Clause {
+    constructor() {
+        super();
+    }
+
+    toString() {
+        return "DELETE";
+    }
+}
+
 class FromClause extends Clause {
     private table: string;
 
@@ -221,12 +231,12 @@ enum QueryType {
     SELECT,
     INSERT,
     UPDATE,
+    DELETE
 }
 
 export default class Query<T> {
     private type: QueryType;
-    private selectClause: SelectClause;
-    private clauses = [] as Clause[];
+    private clauses = [] as (Clause | Query<any>)[];
     private data: any[];
     private alias: string;
 
@@ -234,22 +244,15 @@ export default class Query<T> {
         this.type = type;
     }
 
-    select(...fields: string[]) {
-        this.type = QueryType.SELECT;
-        this.selectClause = new SelectClause(fields.length === 0 ? ["*"] : fields);
-        return this;
-    }
-
-    static from<T extends Entity>(table: T) {
+    static select<T extends Entity>(...fields: string[]) {
         const query = new Query<T>(QueryType.SELECT);
-        query.clauses.push(new FromClause(table as any));
+        if (fields.length === 0) fields.push("*");
+        query.clauses.push(new SelectClause(fields));
         return query;
     }
 
-    static insert<T extends Entity>(table: T & typeof Entity, data: object, fields: string[] = undefined) {
+    static insert<T extends Entity>(table: T & typeof Entity, data: object, fields: string[] = Object.keys(data)) {
         const query = new Query<T>(QueryType.INSERT);
-        if (fields === undefined)
-            fields = Object.keys(data);
         query.clauses.push(new InsertClause(table, fields));
         query.data = Object.values(data);
         return query;
@@ -259,6 +262,24 @@ export default class Query<T> {
         const query = new Query<T>(QueryType.UPDATE);
         query.clauses.push(new UpdateClause(table));
         return query;
+    }
+
+    static delete<T extends Entity>() {
+        const query = new Query<T>(QueryType.DELETE);
+        query.clauses.push(new DeleteClause());
+        return query;
+    }
+
+    static exists<T extends Entity>(innerQuery: Query<T>) {
+        const query = new Query<T>(QueryType.SELECT);
+        query.clauses.push(new SelectClause(["EXISTS"]));
+        query.clauses.push(innerQuery);
+        return query;
+    }
+
+    from(table: typeof Entity) {
+        this.clauses.push(new FromClause(table));
+        return this;
     }
 
     and(column: string, operator: Operators, value: any) {
@@ -321,11 +342,6 @@ export default class Query<T> {
             throw new Error("Cannot call set() on a non-update query");
 
         this.clauses.push(new SetClause(data));
-        this.setData(data);
-        return this;
-    }
-
-    setData(data: object) {
         this.data = Object.values(data);
         return this;
     }
@@ -350,12 +366,13 @@ export default class Query<T> {
 
     toString() {
         if (this.type === QueryType.SELECT) {
-            const clauses = (this.selectClause ? [this.selectClause] : [] as Clause[]).concat(this.clauses);
-            return `(${clauses.join(" ")})${this.alias ? ` AS ${this.alias}` : ""}`;
+            return `(${this.clauses.join(" ")})${this.alias ? ` AS ${this.alias}` : ""}`;
         }
         else if (this.type === QueryType.INSERT)
             return `${this.clauses[0]}`;
         else if (this.type === QueryType.UPDATE)
+            return `${this.clauses.join(" ")}`;
+        else if (this.type === QueryType.DELETE)
             return `${this.clauses.join(" ")}`;
     }
 }

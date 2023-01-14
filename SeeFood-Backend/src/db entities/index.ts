@@ -1,8 +1,7 @@
 import { Category } from "./category";
 import { Restaurant } from "./restaurant";
 import { RestaurantCategory } from "./restaurantCategory";
-import { Review } from "./review";
-import { Reply } from "./reply";
+import { Review, Reply, Comment } from "./comment";
 import { User } from "./user";
 
 export default abstract class Entity {
@@ -11,4 +10,4 @@ export default abstract class Entity {
     static readonly requiredColumns: string[];
 }
 
-export { Category, Restaurant, RestaurantCategory, User, Review, Reply };
+export { Category, Restaurant, RestaurantCategory, User, Review, Reply, Comment };
