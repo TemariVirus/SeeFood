@@ -86,7 +86,7 @@ router.post("/users", async (req, res) => {
             .send("Missing name or password.");
 
     // Ensure name is unique
-    if (checkExists(User, ["name"], [user.name]))
+    if (await checkExists(User, ["name"], [user.name]))
         return res.status(HttpStatusCodes.BAD_REQUEST)
             .send("Name is already taken.");
 
@@ -104,15 +104,9 @@ router.put("/users", (req, res) =>
                 .send("Must have at least new name or password.");
 
         // Update user
-        const { name, password } = userUpdate;
-        if (name)
-            user.name = name;
-        if (password)
-            user.setPassword(password);
-
         return res.status(HttpStatusCodes.OK)
             .send(await Query.update(User)
-                .set(user)
+                .set(userUpdate)
                 .where("id", Operators.EQUAL, user.id)
                 .execute());
     }));
@@ -140,7 +134,15 @@ router.post("/comments", (req, res) =>
 
 router.put("/comments/:id", async (req, res) =>
     checkAuth(req, res, async user => {
+        // Ensure isReply is a boolean
+        const isReplyString = (req.query.isReply.toString()).toLowerCase();
+        if (isReplyString !== "true" && isReplyString !== "false")
+            return res.status(HttpStatusCodes.BAD_REQUEST)
+                .send("isReply must be specified as a boolean.");
+        const isReply = isReplyString === "true";
+
         // Ensure comment is formatted correctly
+        req.body.is_reply = isReply;
         const comment = Comment.fromUpdateRequest(req.body);
         if (!comment)
             return res.status(HttpStatusCodes.BAD_REQUEST)
@@ -151,7 +153,8 @@ router.put("/comments/:id", async (req, res) =>
                 .from(comment instanceof Reply ? Reply : Review)
                 .where("id", Operators.EQUAL, id)
                 .limit(1)
-                .toArray()[0];
+                .toArray()
+                .then(comments => comments[0]);
 
             // Ensure user is the author
             if (original.user_id !== user.id)
@@ -170,20 +173,15 @@ router.put("/comments/:id", async (req, res) =>
 router.delete("/comments/:id", async (req, res) =>
     checkAuth(req, res, async user => {
         // Ensure isReply is a boolean
-        const isReply = req.query.isReply;
-        if (typeof isReply !== "boolean")
+        const isReplyString = (req.query.isReply.toString()).toLowerCase();
+        if (isReplyString !== "true" && isReplyString !== "false")
             return res.status(HttpStatusCodes.BAD_REQUEST)
                 .send("isReply must be specified as a boolean.");
+        const isReply = isReplyString === "true";
 
         checkId(req, res, isReply ? Reply : Review, async id => {
             // Ensure user is the author
-            const original = await Query.select("user_id")
-                .from(isReply ? Reply : Review)
-                .where("id", Operators.EQUAL, id)
-                .limit(1)
-                .toArray()
-                .then((result) => result[0]);
-            if (original.user_id !== user.id)
+            if (!await checkExists(isReply ? Reply : Review, ["id", "user_id"], [id, user.id]))
                 return res.status(HttpStatusCodes.FORBIDDEN)
                     .send("You are not the author of this comment.");
 
@@ -204,7 +202,7 @@ async function checkId(req, res, table: typeof Entity, next: (id: number) => any
             .send("Invalid id.");
 
     // Ensure entity exists
-    if (!checkExists(table, ["id"], [id]))
+    if (!await checkExists(table, ["id"], [id]))
         return res.status(HttpStatusCodes.NOT_FOUND)
             .send("Entity not found.");
 
@@ -212,9 +210,18 @@ async function checkId(req, res, table: typeof Entity, next: (id: number) => any
 }
 
 async function checkExists(table: typeof Entity, fields: string[], values: any[]) {
-    return await Query.exists(Query.select()
+    if (fields.length !== values.length)
+        throw new Error("Fields and values must be the same length.");
+    if (fields.length === 0)
+        throw new Error("Must have at least one field.");
+
+    let innerQuery = Query.select()
         .from(table)
-        .where(fields.join(","), Operators.EQUAL, values.map(() => "?").join(",")))
+        .where(fields[0], Operators.EQUAL);
+    for (let i = 1; i < fields.length; i++)
+        innerQuery = innerQuery.and(fields[i], Operators.EQUAL);
+
+    return await Query.exists(innerQuery)
         .execute(values)
         .then((result) => Object.values(result[0])[0] === 1);
 }
@@ -239,13 +246,8 @@ async function checkAuth(req, res, next: (user: User) => any) {
         .toArray()
         .then((users) => users[0]));
 
-    // Check if user exists
-    if (!user)
-        return res.status(HttpStatusCodes.UNAUTHORIZED)
-            .send("Incorrect username or password.");
-
-    // Check if password is correct
-    if (!user.checkPassword(credentials[1]))
+    // Check if user exists and password is correct
+    if (!user.name || !user.checkPassword(credentials[1]))
         return res.status(HttpStatusCodes.UNAUTHORIZED)
             .send("Incorrect username or password.");
 

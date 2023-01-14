@@ -124,15 +124,16 @@ class AndClause extends Clause {
     private operator: Operators;
     private value: any;
 
-    constructor(column: string, operator: Operators, value: any) {
+    constructor(column: string, operator: Operators, value?: any) {
         super();
         this.column = column;
         this.operator = operator;
-        this.value = value;
+        if (value)
+            this.value = value;
     }
 
     public toString(): string {
-        return `AND ${this.column} ${this.operator} ${this.value}`;
+        return `AND ${this.column} ${this.operator} ${this.value ?? "?"}`;
     }
 }
 
@@ -284,7 +285,7 @@ export class Query<T> {
         return this;
     }
 
-    and(column: string, operator: Operators, value: any) {
+    and(column: string, operator: Operators, value?: any) {
         this.clauses.push(new AndClause(column, operator, value));
         return this;
     }
@@ -294,7 +295,7 @@ export class Query<T> {
         return this;
     }
 
-    where(column: string, operator: Operators, value: any) {
+    where(column: string, operator: Operators, value?: any) {
         // Escape strings with quotes
         if (typeof value === "string")
             value = `"${value}"`;
@@ -304,6 +305,9 @@ export class Query<T> {
             value = value.map(v => typeof v === "string" ? `"${v}"` : v);
             value = `(${value.join(",")})`;
         }
+
+        // If value is undefined, use a placeholder
+        value ??= column.split(",").map(_ => "?").join(",");
 
         this.clauses.push(new WhereClause(column, operator, value));
         return this;

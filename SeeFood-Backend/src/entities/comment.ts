@@ -44,12 +44,9 @@ const updateCommentRequest = z.object({
     content: z.string().optional(),
     rating: z.number().int().min(0).max(5).optional(),
     is_reply: z.boolean(),
-}).refine(data => data.is_reply === (data.rating === undefined), {
-    message: "Reviews must have ratings, and replies cannot have ratings",
+}).refine(data => !data.is_reply || !data.rating, {
+    message: "Replies cannot have ratings",
     path: ["rating"]
-}).refine(data => !data.is_reply || (data.content !== undefined), {
-    message: "Replies must have content.",
-    path: ["content"]
 });
 
 export class Comment {

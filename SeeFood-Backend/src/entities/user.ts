@@ -33,9 +33,10 @@ export class User implements Entity {
         return compareSync(password, this.password);
     }
 
-    private static fromData(data: { name?: string, password?: string }) {
+    static fromData(data: { name?: string, password?: string }) {
         const user = new User();
-        user.name = data.name;
+        if (data.name)
+            user.name = data.name;
         if (data.password)
             user.setPassword(data.password);
         return user;
