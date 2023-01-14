@@ -10,8 +10,6 @@
       "moduleResolution": "node",
       "outDir": "../build",
       "esModuleInterop": true,
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
       "sourceMap": true,
    }
 }

@@ -1,6 +1,8 @@
-import Entity from "./db entities";
+import Entity from "./entities";
 import dbConnection from ".";
-import { QueryError } from "mysql2";
+import { OkPacket, QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
+
+type QueryResult = RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader;
 
 export enum Operators {
     EQUAL = "=",
@@ -234,7 +236,7 @@ enum QueryType {
     DELETE
 }
 
-export default class Query<T> {
+export class Query<T> {
     private type: QueryType;
     private clauses = [] as (Clause | Query<any>)[];
     private data: any[];
@@ -308,7 +310,7 @@ export default class Query<T> {
     }
 
     join<U extends Entity>(type: JoinType,
-        table: (typeof Entity) | Query<U>,
+        table: (U & typeof Entity) | Query<U>,
         left_col: string,
         operator: Operators,
         right_col: string): Query<T & U> {
@@ -351,23 +353,20 @@ export default class Query<T> {
         return this;
     }
 
-    execute(): Promise<any> {
-        console.log(this.toString());
-        return new Promise((resolve, _) => dbConnection.query(this.toString(), this.data, (err, result) => resolve(err ?? result)));
+    execute(data?: any[]): Promise<QueryError | QueryResult> {
+        return new Promise((resolve, _) => dbConnection.query(this.toString(), data ?? this.data, (err, result) => resolve(err ?? result)));
     }
 
-    toArray(): Promise<QueryError | T[]> {
+    toArray(data?: any[]): Promise<QueryError | T[]> {
         if (this.type !== QueryType.SELECT)
             throw new Error("Cannot call toArray() on a non-select query");
 
-        console.log(this.toString());
-        return new Promise((resolve, _) => dbConnection.query(this.toString(), this.data, (err, result) => resolve(err ?? result as T[])));
+        return new Promise((resolve, _) => dbConnection.query(this.toString(), data ?? this.data, (err, result) => resolve(err ?? result as T[])));
     }
 
     toString() {
-        if (this.type === QueryType.SELECT) {
+        if (this.type === QueryType.SELECT)
             return `(${this.clauses.join(" ")})${this.alias ? ` AS ${this.alias}` : ""}`;
-        }
         else if (this.type === QueryType.INSERT)
             return `${this.clauses[0]}`;
         else if (this.type === QueryType.UPDATE)
