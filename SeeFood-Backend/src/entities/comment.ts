@@ -1,8 +1,8 @@
 import Entity from ".";
-import { Query } from "../query";
+import { Query } from "../db-query/query";
 import { z } from "zod";
 
-declare module '../query' {
+declare module '../db-query/query' {
     interface Query<T> {
         toCommentArray(): Promise<T[]>;
     }
@@ -81,41 +81,52 @@ export class Comment {
         }
     }
 
-    static fromNewRequest(request: z.infer<typeof newCommentRequest>): Review | Reply {
-        // Ensure request is formatted correctly
-        const result = newCommentRequest.safeParse(request);
-        if (!result.success)
-            return null;
+    static fromNewRequest(request: z.infer<typeof newCommentRequest>) {
+        let result = {} as { data: any, success: boolean };
+        try {
+            // Ensure request is formatted correctly
+            const { content, rating, parent_id, user_id, is_reply } = newCommentRequest.parse(request);
+            // Create comment
+            const comment = is_reply ? new Reply() : new Review();
+            comment.content = content;
+            comment.user_id = user_id;
+            comment.date = new Date(Date.now());
+            if (comment instanceof Reply)
+                comment.review_id = parent_id;
+            else {
+                comment.restaurant_id = parent_id;
+                comment.rating = rating;
+            }
 
-        // Create comment
-        const { content, rating, parent_id, user_id, is_reply } = result.data;
-        const comment = is_reply ? new Reply() : new Review();
-        comment.content = content;
-        comment.user_id = user_id;
-        comment.date = new Date(Date.now());
-        if (comment instanceof Reply)
-            comment.review_id = parent_id;
-        else {
-            comment.restaurant_id = parent_id;
-            comment.rating = rating;
+            result.data = comment;
+            result.success = true;
+        } catch (e) {
+            result.data = e.issues;
+            result.success = false;
+        } finally {
+            return result;
         }
-
-        return comment;
     }
 
-    static fromUpdateRequest(request: z.infer<typeof updateCommentRequest>): Review | Reply {
-        // Ensure request is formatted correctly
-        const result = updateCommentRequest.safeParse(request);
-        if (!result.success)
-            return null;
+    static fromUpdateRequest(request: z.infer<typeof updateCommentRequest>) {
+        let result = {} as { data: any, success: boolean };
+        try {
+            // Ensure request is formatted correctly
+            const { content, rating, is_reply } = updateCommentRequest.parse(request);
+            // Create comment
+            const comment = is_reply ? new Reply() : new Review();
+            if (content)
+                comment.content = content;
+            if (comment instanceof Review && rating)
+                comment.rating = rating;
 
-        // Create comment
-        const { content, rating, is_reply } = result.data;
-        const comment = is_reply ? new Reply() : new Review();
-        comment.content = content;
-        if (comment instanceof Review)
-            comment.rating = rating;
-
-        return comment;
+            result.data = comment;
+            result.success = true;
+        } catch (e) {
+            result.data = e.issues;
+            result.success = false;
+        } finally {
+            return result;
+        }
     }
 }

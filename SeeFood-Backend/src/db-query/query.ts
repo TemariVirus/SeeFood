@@ -1,5 +1,5 @@
-import dbConnection from ".";
-import Entity from "./entities";
+import dbConnection from "..";
+import Entity from "../entities";
 import * as Clause from "./clauses";
 import { OkPacket, QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
 
@@ -61,7 +61,7 @@ export class Query<T> {
     static insert<T extends Entity>(table: T & typeof Entity, data: object, fields: string[] = Object.keys(data)) {
         const query = new Query<T>(QueryType.INSERT);
         query.clauses.push(new Clause.InsertClause(table, fields));
-        query.data = Object.values(data);
+        query.data = fields.map(field => data[field]);
         return query;
     }
 

@@ -24,31 +24,50 @@ export class User implements Entity {
     id: number;
     name: string;
     password: string;
+    salt: string;
 
     public setPassword(password: string) {
-        this.password = hashSync(password, User.rounds);
+        const hash = hashSync(password, User.rounds);
+        this.salt = hash.slice(7, 29);
+        this.password = hash.slice(29);
     }
 
     public checkPassword(password: string) {
-        return compareSync(password, this.password);
+        return compareSync(password, `$2b$${User.rounds}$${this.salt}${this.password}`);
     }
 
-    static fromData(data: Partial<User>) {
+    private static fromRequest(data: Partial<User>) {
         const user = new User();
         Object.assign(user, data);
         // Hash password if provided
-        if (data.password)
+        if (data.password) {
             user.setPassword(data.password);
+        }
         return user;
     }
 
     static fromNewRequest(request: z.infer<typeof newUserRequest>) {
-        const result = newUserRequest.safeParse(request);
-        return result.success ? User.fromData(result.data) : null;
+        let result = {} as { data: any, success: boolean };
+        try {
+            result.data = User.fromRequest(newUserRequest.parse(request));
+            result.success = true;
+        } catch (e) {
+            result.data = e.issues;
+            result.success = false;
+        }
+        return result;
     }
 
     static fromUpdateRequest(request: z.infer<typeof updateUserRequest>) {
-        const result = updateUserRequest.safeParse(request);
-        return result.success ? User.fromData(result.data) : null;
+        let result = {} as { data: any, success: boolean };
+        try {
+            result.data = User.fromRequest(updateUserRequest.parse(request));
+            result.success = true;
+        } catch (e) {
+            result.data = e.issues;
+            result.success = false;
+        } finally {
+            return result;
+        }
     }
 }

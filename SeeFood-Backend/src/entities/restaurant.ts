@@ -1,7 +1,7 @@
 import Entity, { Category, RestaurantCategory } from '.';
-import { Query, JoinType, SqlOperators } from '../query';
+import { Query, JoinType, SqlOperators } from '../db-query/query';
 
-declare module '../query' {
+declare module '../db-query/query' {
     interface Query<T> {
         toRestaurantArray(): Promise<T[]>;
     }

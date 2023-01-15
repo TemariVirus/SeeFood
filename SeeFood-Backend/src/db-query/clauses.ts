@@ -1,4 +1,4 @@
-import Entity from "./entities";
+import Entity from "../entities";
 import { Query, JoinType, SqlOperators, UnionType } from "./query";
 
 export abstract class Clause {

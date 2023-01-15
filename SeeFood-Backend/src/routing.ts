@@ -1,5 +1,5 @@
 import express from "express";
-import { Query, SqlOperators, UnionType } from "./query";
+import { Query, SqlOperators, UnionType } from "./db-query/query";
 import Entity, * as Entities from "./entities";
 
 export enum HttpStatusCodes {
@@ -91,10 +91,11 @@ router.get("/users/:id/comments", (req, res) =>
 // Create a new user
 router.post("/users", async (req, res) => {
     // Ensure request is formatted correctly
-    const user = Entities.User.fromNewRequest(req.body);
-    if (!user)
+    const request = Entities.User.fromNewRequest(req.body);
+    if (!request.success)
         return res.status(HttpStatusCodes.BAD_REQUEST)
-            .send("Missing name or password.");
+            .send(request.data);
+    const user = request.data as Entities.User;
 
     // Ensure name is unique
     if (await checkExists(Entities.User, { name: user.name }))
@@ -111,10 +112,11 @@ router.post("/users", async (req, res) => {
 router.put("/users", (req, res) =>
     checkAuth(req, res, async user => {
         // Ensure request is formatted correctly
-        const userUpdate = Entities.User.fromUpdateRequest(req.body);
-        if (!userUpdate)
+        const request = Entities.User.fromUpdateRequest(req.body);
+        if (!request.success)
             return res.status(HttpStatusCodes.BAD_REQUEST)
-                .send("Must have at least new name or password.");
+                .send(request.data);
+        const userUpdate = request.data as Entities.User;
 
         // Update user
         return res.status(HttpStatusCodes.OK)
@@ -137,17 +139,45 @@ router.delete("/users", (req, res) =>
 router.post("/comments", (req, res) =>
     checkAuth(req, res, async user => {
         req.body.user_id = user.id;
-        // Ensure comment is formatted correctly
-        const comment = Entities.Comment.fromNewRequest(req.body);
-        if (!comment)
+
+        // Ensure isReply is a boolean
+        const isReplyString = req.query.isReply?.toString().toLowerCase();
+        if (isReplyString !== "true" && isReplyString !== "false")
             return res.status(HttpStatusCodes.BAD_REQUEST)
-                .send("Bad comment data.");
+                .send("isReply must be specified as a boolean. (true/false)");
+        req.body.is_reply = isReplyString === "true";
+
+        // Ensure comment is formatted correctly
+        const request = Entities.Comment.fromNewRequest(req.body);
+        if (!request.success)
+            return res.status(HttpStatusCodes.BAD_REQUEST)
+                .send(request.data);
+        const comment = request.data as Entities.Review | Entities.Reply;
+
+        // Ensure user has not already reviewed restaurant
+        if (comment instanceof Entities.Review) {
+            if (await checkExists(Entities.Review, { user_id: user.id, restaurant_id: comment.restaurant_id }))
+                return res.status(HttpStatusCodes.BAD_REQUEST)
+                    .send("You have already rated or reviewed this restaurant.");
+        }
 
         // Ensure parent exists
         if (comment instanceof Entities.Reply) {
-            if (!await checkExists(Entities.Review, { id: comment.review_id }))
+            // Get parent review
+            const review = await Query.select("id", "content")
+                .from(Entities.Review)
+                .where("id", SqlOperators.EQUAL, comment.review_id)
+                .limit(1)
+                .toArray()
+                .then(reviews => reviews[0]);
+            if (!review)
                 return res.status(HttpStatusCodes.BAD_REQUEST)
                     .send("Parent review does not exist.");
+
+            // Ensure parent review has content
+            if (!review.content)
+                return res.status(HttpStatusCodes.BAD_REQUEST)
+                    .send("Cannot reply to a review with no content.");
         } else {
             if (!await checkExists(Entities.Restaurant, { id: comment.restaurant_id }))
                 return res.status(HttpStatusCodes.BAD_REQUEST)
@@ -164,7 +194,7 @@ router.post("/comments", (req, res) =>
 router.put("/comments/:id", async (req, res) =>
     checkAuth(req, res, async user => {
         // Ensure isReply is a boolean
-        const isReplyString = (req.query.isReply.toString()).toLowerCase();
+        const isReplyString = req.query.isReply?.toString().toLowerCase();
         if (isReplyString !== "true" && isReplyString !== "false")
             return res.status(HttpStatusCodes.BAD_REQUEST)
                 .send("isReply must be specified as a boolean. (true/false)");
@@ -172,10 +202,11 @@ router.put("/comments/:id", async (req, res) =>
 
         // Ensure comment is formatted correctly
         req.body.is_reply = isReply;
-        const comment = Entities.Comment.fromUpdateRequest(req.body);
-        if (!comment)
+        const request = Entities.Comment.fromUpdateRequest(req.body);
+        if (!request.success)
             return res.status(HttpStatusCodes.BAD_REQUEST)
-                .send("Bad comment update data.");
+                .send(request.data);
+        const comment = request.data as Entities.Review | Entities.Reply;
 
         // Ensure comment exists
         return checkId(req, res, comment instanceof Entities.Reply ? Entities.Reply : Entities.Review, async id => {
@@ -204,7 +235,7 @@ router.put("/comments/:id", async (req, res) =>
 router.delete("/comments/:id", async (req, res) =>
     checkAuth(req, res, async user => {
         // Ensure isReply is a boolean
-        const isReplyString = (req.query.isReply.toString()).toLowerCase();
+        const isReplyString = req.query.isReply?.toString().toLowerCase();
         if (isReplyString !== "true" && isReplyString !== "false")
             return res.status(HttpStatusCodes.BAD_REQUEST)
                 .send("isReply must be specified as a boolean.");
@@ -237,7 +268,7 @@ async function checkId(req, res, table: typeof Entity, then: (id: number) => any
     // Ensure entity exists
     if (!await checkExists(table, { id: id }))
         return res.status(HttpStatusCodes.NOT_FOUND)
-            .send("Entity not found.");
+            .send(table.prototype.constructor.name + " not found.");
 
     return then(id);
 }
