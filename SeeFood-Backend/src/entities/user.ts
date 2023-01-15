@@ -33,10 +33,10 @@ export class User implements Entity {
         return compareSync(password, this.password);
     }
 
-    static fromData(data: { name?: string, password?: string }) {
+    static fromData(data: Partial<User>) {
         const user = new User();
-        if (data.name)
-            user.name = data.name;
+        Object.assign(user, data);
+        // Hash password if provided
         if (data.password)
             user.setPassword(data.password);
         return user;

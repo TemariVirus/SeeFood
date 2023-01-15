@@ -1,5 +1,12 @@
 import Entity from ".";
+import { Query } from "../query";
 import { z } from "zod";
+
+declare module '../query' {
+    interface Query<T> {
+        toCommentArray(): Promise<T[]>;
+    }
+}
 
 export class Review implements Entity {
     static readonly tableName = "reviews";
@@ -58,7 +65,23 @@ export class Comment {
     user_id: number;
     is_reply: boolean;
 
-    static fromNewRequest(request): Review | Reply {
+    static {
+        Query.prototype.toCommentArray = function (this: Query<any>) {
+            return this
+                .toArray()
+                .then(comments => (comments as any[]).map(c => {
+                    return {
+                        ...c,
+                        content: c.content ??= undefined,
+                        rating: c.rating ??= undefined,
+                        date: c.date.getTime(),
+                        is_reply: c.is_reply === 1
+                    };
+                }))
+        }
+    }
+
+    static fromNewRequest(request: z.infer<typeof newCommentRequest>): Review | Reply {
         // Ensure request is formatted correctly
         const result = newCommentRequest.safeParse(request);
         if (!result.success)
@@ -80,7 +103,7 @@ export class Comment {
         return comment;
     }
 
-    static fromUpdateRequest(request): Review | Reply {
+    static fromUpdateRequest(request: z.infer<typeof updateCommentRequest>): Review | Reply {
         // Ensure request is formatted correctly
         const result = updateCommentRequest.safeParse(request);
         if (!result.success)

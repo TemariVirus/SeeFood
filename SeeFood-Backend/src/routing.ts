@@ -1,6 +1,6 @@
 import express from "express";
-import { Query, Operators, UnionType } from "./query";
-import Entity, { Category, Restaurant, RestaurantCategory, User, Review, Reply, Comment } from "./entities";
+import { Query, SqlOperators, UnionType } from "./query";
+import Entity, * as Entities from "./entities";
 
 export enum HttpStatusCodes {
     OK = 200,
@@ -15,143 +15,173 @@ export enum HttpStatusCodes {
 
 const router = express.Router();
 
-router.get("/ping", (_, res) => {
+// Check connection with server
+router.get("/ping", async (_, res) =>
     res.status(HttpStatusCodes.OK)
-        .send({
-            message: "pong",
-        });
-});
+        .send("pong"));
 
-router.get("/categories", async (_, res) => {
+// Get all categoeries
+router.get("/categories", async (_, res) =>
     res.status(HttpStatusCodes.OK)
         .send(await Query.select()
-            .from(Category)
-            .toArray());
-});
+            .from(Entities.Category)
+            .toArray()));
 
+// Get all restaurants that have a category with the given id
 router.get("/categories/:id/restaurants", (req, res) =>
-    checkId(req, res, Category, async id => res.status(HttpStatusCodes.OK)
-        .send(await Restaurant
-            .getQuery()
-            .where("rc.id", Operators.IN, Query.select("restaurant_id")
-                .from(RestaurantCategory)
-                .where("category_id", Operators.EQUAL, id))
+    checkId(req, res, Entities.Category, async id => res.status(HttpStatusCodes.OK)
+        .send(await Entities.Restaurant
+            .selectQueryWithCategories()
+            .where("rc.id", SqlOperators.IN, Query.select("restaurant_id")
+                .from(Entities.RestaurantCategory)
+                .where("category_id", SqlOperators.EQUAL, id))
             .toRestaurantArray())));
 
-router.get("/restaurants", async (_, res) => {
-    return res.status(HttpStatusCodes.OK)
-        .send(await Restaurant
-            .getQuery()
-            .toRestaurantArray());
-});
+// Get all restaurants
+router.get("/restaurants", async (_, res) =>
+    res.status(HttpStatusCodes.OK)
+        .send(await Entities.Restaurant
+            .selectQueryWithCategories()
+            .toRestaurantArray()));
 
+// Get a restaurant with the given id
 router.get("/restaurants/:id", (req, res) =>
-    checkId(req, res, Restaurant, async id =>
+    checkId(req, res, Entities.Restaurant, async id =>
         res.status(HttpStatusCodes.OK)
-            .send(await Restaurant
-                .getQuery()
-                .and("rc.id", Operators.EQUAL, id)
+            .send(await Entities.Restaurant
+                .selectQueryWithCategories()
+                .and("rc.id", SqlOperators.EQUAL, id)
                 .limit(1)
                 .toRestaurantArray()
                 .then((restaurants) => restaurants[0]))));
 
+// Get all comments for a restaurant with the given id
 router.get("/restaurants/:id/comments", (req, res) =>
-    checkId(req, res, Restaurant, async id => {
+    checkId(req, res, Entities.Restaurant, async id => {
         const reviewQuery = Query.select("id", "content", "rating", "restaurant_id AS parent_id", "date", "user_id", "FALSE AS is_reply")
-            .from(Review)
-            .where("restaurant_id", Operators.EQUAL, id);
+            .from(Entities.Review)
+            .where("restaurant_id", SqlOperators.EQUAL, id);
         const replyQuery = Query.select("id", "content", "NULL", "review_id", "date", "user_id", "TRUE")
-            .from(Reply)
-            .where("review_id", Operators.IN,
+            .from(Entities.Reply)
+            .where("review_id", SqlOperators.IN,
                 Query.select("id")
-                    .from(Review)
-                    .where("restaurant_id", Operators.EQUAL, id));
+                    .from(Entities.Review)
+                    .where("restaurant_id", SqlOperators.EQUAL, id));
+        // Union the two queries and return the result
         return res.status(HttpStatusCodes.OK)
             .send(await Query.union(UnionType.UNION_ALL, reviewQuery, replyQuery)
-                .toArray()
-                .then((comments) => (comments as any[]).map(c => {
-                    return {
-                        ...c,
-                        date: c.date.getTime(),
-                        is_reply: c.is_reply === 1
-                    }
-                })));
+                .toCommentArray());
     }));
 
+// Get all comments for a user with the given id
+router.get("/users/:id/comments", (req, res) =>
+    checkId(req, res, Entities.User, async id => {
+        const reviewQuery = Query.select("id", "content", "rating", "restaurant_id AS parent_id", "date", "user_id", "FALSE AS is_reply")
+            .from(Entities.Review)
+            .where("user_id", SqlOperators.EQUAL, id);
+        const replyQuery = Query.select("id", "content", "NULL", "review_id", "date", "user_id", "TRUE")
+            .from(Entities.Reply)
+            .where("user_id", SqlOperators.EQUAL, id);
+        // Union the two queries and return the result
+        return res.status(HttpStatusCodes.OK)
+            .send(await Query.union(UnionType.UNION_ALL, reviewQuery, replyQuery)
+                .toCommentArray());
+    }));
+
+// Create a new user
 router.post("/users", async (req, res) => {
-    const user = User.fromNewRequest(req.body);
     // Ensure request is formatted correctly
+    const user = Entities.User.fromNewRequest(req.body);
     if (!user)
         return res.status(HttpStatusCodes.BAD_REQUEST)
             .send("Missing name or password.");
 
     // Ensure name is unique
-    if (await checkExists(User, ["name"], [user.name]))
+    if (await checkExists(Entities.User, { name: user.name }))
         return res.status(HttpStatusCodes.BAD_REQUEST)
             .send("Name is already taken.");
 
     // Create user
     return res.status(HttpStatusCodes.CREATED)
-        .send(await Query.insert(User, user)
+        .send(await Query.insert(Entities.User, user)
             .execute());
 });
 
+// Update a user
 router.put("/users", (req, res) =>
     checkAuth(req, res, async user => {
-        const userUpdate = User.fromUpdateRequest(req.body);
+        // Ensure request is formatted correctly
+        const userUpdate = Entities.User.fromUpdateRequest(req.body);
         if (!userUpdate)
             return res.status(HttpStatusCodes.BAD_REQUEST)
                 .send("Must have at least new name or password.");
 
         // Update user
         return res.status(HttpStatusCodes.OK)
-            .send(await Query.update(User)
+            .send(await Query.update(Entities.User)
                 .set(userUpdate)
-                .where("id", Operators.EQUAL, user.id)
+                .where("id", SqlOperators.EQUAL, user.id)
                 .execute());
     }));
 
+// Delete a user
 router.delete("/users", (req, res) =>
     checkAuth(req, res, async user =>
         res.status(HttpStatusCodes.OK)
             .send(await Query.delete()
-                .from(User)
-                .where("id", Operators.EQUAL, user.id)
+                .from(Entities.User)
+                .where("id", SqlOperators.EQUAL, user.id)
                 .execute())));
 
+// Create a new comment
 router.post("/comments", (req, res) =>
     checkAuth(req, res, async user => {
         req.body.user_id = user.id;
-        const comment = Comment.fromNewRequest(req.body);
+        // Ensure comment is formatted correctly
+        const comment = Entities.Comment.fromNewRequest(req.body);
         if (!comment)
             return res.status(HttpStatusCodes.BAD_REQUEST)
                 .send("Bad comment data.");
 
+        // Ensure parent exists
+        if (comment instanceof Entities.Reply) {
+            if (!await checkExists(Entities.Review, { id: comment.review_id }))
+                return res.status(HttpStatusCodes.BAD_REQUEST)
+                    .send("Parent review does not exist.");
+        } else {
+            if (!await checkExists(Entities.Restaurant, { id: comment.restaurant_id }))
+                return res.status(HttpStatusCodes.BAD_REQUEST)
+                    .send("Parent restaurant does not exist.");
+        }
+
+        // Create comment
         return res.status(HttpStatusCodes.CREATED)
-            .send(await Query.insert(req.body.is_reply ? Reply : Review, comment)
+            .send(await Query.insert(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review, comment)
                 .execute());
     }));
 
+// Update a comment
 router.put("/comments/:id", async (req, res) =>
     checkAuth(req, res, async user => {
         // Ensure isReply is a boolean
         const isReplyString = (req.query.isReply.toString()).toLowerCase();
         if (isReplyString !== "true" && isReplyString !== "false")
             return res.status(HttpStatusCodes.BAD_REQUEST)
-                .send("isReply must be specified as a boolean.");
+                .send("isReply must be specified as a boolean. (true/false)");
         const isReply = isReplyString === "true";
 
         // Ensure comment is formatted correctly
         req.body.is_reply = isReply;
-        const comment = Comment.fromUpdateRequest(req.body);
+        const comment = Entities.Comment.fromUpdateRequest(req.body);
         if (!comment)
             return res.status(HttpStatusCodes.BAD_REQUEST)
                 .send("Bad comment update data.");
 
-        return checkId(req, res, comment instanceof Reply ? Reply : Review, async id => {
+        // Ensure comment exists
+        return checkId(req, res, comment instanceof Entities.Reply ? Entities.Reply : Entities.Review, async id => {
             const original = await Query.select("user_id")
-                .from(comment instanceof Reply ? Reply : Review)
-                .where("id", Operators.EQUAL, id)
+                .from(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review)
+                .where("id", SqlOperators.EQUAL, id)
                 .limit(1)
                 .toArray()
                 .then(comments => comments[0]);
@@ -163,13 +193,14 @@ router.put("/comments/:id", async (req, res) =>
 
             // Update comment
             return res.status(HttpStatusCodes.OK)
-                .send(await Query.update(comment instanceof Reply ? Reply : Review)
+                .send(await Query.update(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review)
                     .set(comment)
-                    .where("id", Operators.EQUAL, id)
+                    .where("id", SqlOperators.EQUAL, id)
                     .execute());
         });
     }));
 
+// Delete a comment
 router.delete("/comments/:id", async (req, res) =>
     checkAuth(req, res, async user => {
         // Ensure isReply is a boolean
@@ -179,54 +210,60 @@ router.delete("/comments/:id", async (req, res) =>
                 .send("isReply must be specified as a boolean.");
         const isReply = isReplyString === "true";
 
-        checkId(req, res, isReply ? Reply : Review, async id => {
+        // Ensure comment exists
+        checkId(req, res, isReply ? Entities.Reply : Entities.Review, async id => {
             // Ensure user is the author
-            if (!await checkExists(isReply ? Reply : Review, ["id", "user_id"], [id, user.id]))
+            if (!await checkExists(isReply ? Entities.Reply : Entities.Review, { id: id, user_id: user.id }))
                 return res.status(HttpStatusCodes.FORBIDDEN)
                     .send("You are not the author of this comment.");
 
             // Delete comment
             return res.status(HttpStatusCodes.OK)
                 .send(await Query.delete()
-                    .from(isReply ? Reply : Review)
-                    .where("id", Operators.EQUAL, id)
+                    .from(isReply ? Entities.Reply : Entities.Review)
+                    .where("id", SqlOperators.EQUAL, id)
                     .execute());
         });
     }));
 
-async function checkId(req, res, table: typeof Entity, next: (id: number) => any) {
-    const id = Number.parseInt(req.params.id);
+// Check if an id is valid and exists in the specified table
+async function checkId(req, res, table: typeof Entity, then: (id: number) => any) {
     // Ensure id is a number
+    const id = Number.parseInt(req.params.id);
     if (!Number.isSafeInteger(id))
         return res.status(HttpStatusCodes.BAD_REQUEST)
             .send("Invalid id.");
 
     // Ensure entity exists
-    if (!await checkExists(table, ["id"], [id]))
+    if (!await checkExists(table, { id: id }))
         return res.status(HttpStatusCodes.NOT_FOUND)
             .send("Entity not found.");
 
-    return next(id);
+    return then(id);
 }
 
-async function checkExists(table: typeof Entity, fields: string[], values: any[]) {
-    if (fields.length !== values.length)
-        throw new Error("Fields and values must be the same length.");
+// Check if an entity with the specified properties exists in the table
+async function checkExists(table: typeof Entity, properties: Record<string, any>) {
+    // Spilt properties into fields and values
+    const fields = Object.keys(properties);
+    const values = fields.map((field) => properties[field]);
     if (fields.length === 0)
-        throw new Error("Must have at least one field.");
+        throw new Error("Must have at least one property to check.");
 
+    // Create and execute query
     let innerQuery = Query.select()
         .from(table)
-        .where(fields[0], Operators.EQUAL);
+        .where(fields[0], SqlOperators.EQUAL);
     for (let i = 1; i < fields.length; i++)
-        innerQuery = innerQuery.and(fields[i], Operators.EQUAL);
+        innerQuery = innerQuery.and(fields[i], SqlOperators.EQUAL);
 
     return await Query.exists(innerQuery)
         .execute(values)
         .then((result) => Object.values(result[0])[0] === 1);
 }
 
-async function checkAuth(req, res, next: (user: User) => any) {
+// Check authorization header and return user
+async function checkAuth(req, res, then: (user: Entities.User) => any) {
     // Ensure authorization header is present and valid
     const authHeader = req.headers.authorization.split(" ");
     if (authHeader.length !== 2 || authHeader[0] !== "Basic")
@@ -238,10 +275,10 @@ async function checkAuth(req, res, next: (user: User) => any) {
             .send("Credentials were formmatted incorrectly.");
 
     // Get user in database
-    const user = new User();
+    const user = new Entities.User();
     Object.assign(user, await Query.select()
-        .from(User)
-        .where("name", Operators.EQUAL, credentials[0])
+        .from(Entities.User)
+        .where("name", SqlOperators.EQUAL, credentials[0])
         .limit(1)
         .toArray()
         .then((users) => users[0]));
@@ -251,8 +288,7 @@ async function checkAuth(req, res, next: (user: User) => any) {
         return res.status(HttpStatusCodes.UNAUTHORIZED)
             .send("Incorrect username or password.");
 
-    // Call next
-    return next(user);
+    return then(user);
 }
 
 export default router;

@@ -1,5 +1,5 @@
 import Entity, { Category, RestaurantCategory } from '.';
-import { Query, JoinType, Operators } from '../query';
+import { Query, JoinType, SqlOperators } from '../query';
 
 declare module '../query' {
     interface Query<T> {
@@ -28,23 +28,27 @@ export class Restaurant implements Entity {
                 .then((restaurants) => (restaurants as any[]).map(r => {
                     return {
                         ...r,
+                        opening_hours: r.opening_hours ?? undefined,
+                        telephone_no: r.telephone_no ?? undefined,
+                        website: r.website ?? undefined,
                         categories: r.categories.split(","),
                     };
                 }))
         }
     }
 
-    static getQuery() {
+    // Returns a query that selects all restaurants and joins them with their categories
+    static selectQueryWithCategories() {
         return Query.select()
             .from(Restaurant)
             .join(JoinType.JOIN,
                 Query.select("restaurant_id AS id", "GROUP_CONCAT(name) AS categories")
                     .from(RestaurantCategory)
-                    .join(JoinType.LEFT_JOIN, Category, "category_id", Operators.EQUAL, "id")
+                    .join(JoinType.LEFT_JOIN, Category, "category_id", SqlOperators.EQUAL, "id")
                     .groupBy("restaurant_id")
                     .as("rc"),
                 `${Restaurant.tableName}.id`,
-                Operators.EQUAL,
+                SqlOperators.EQUAL,
                 "rc.id");
     }
 }
