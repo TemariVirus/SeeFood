@@ -20,7 +20,7 @@ router.get("/ping", async (_, res) =>
     res.status(HttpStatusCodes.OK)
         .send("pong"));
 
-// Get all categoeries
+// Get all categories
 router.get("/categories", async (_, res) =>
     res.status(HttpStatusCodes.OK)
         .send(await Query.select()
@@ -50,7 +50,7 @@ router.get("/restaurants/:id", (req, res) =>
         res.status(HttpStatusCodes.OK)
             .send(await Entities.Restaurant
                 .selectQueryWithCategories()
-                .and("rc.id", SqlOperators.EQUAL, id)
+                .where(`${Entities.Restaurant.tableName}.id`, SqlOperators.EQUAL, id)
                 .limit(1)
                 .toRestaurantArray()
                 .then((restaurants) => restaurants[0]))));

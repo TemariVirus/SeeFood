@@ -158,7 +158,7 @@ export class Query<T> {
     toArray(data?: any[]): Promise<QueryError | T[]> {
         if (this.type !== QueryType.SELECT)
             throw new Error("Cannot call toArray() on a non-select query");
-
+            
         return new Promise((resolve, _) => dbConnection.query(this.toString(), data ?? this.data, (err, result) => resolve(err ?? result as T[])));
     }
 

@@ -1,4 +1,4 @@
-import Entity, { Category, RestaurantCategory } from '.';
+import Entity, { Category, RestaurantCategory, Review } from '.';
 import { Query, JoinType, SqlOperators } from '../db-query/query';
 
 declare module '../db-query/query' {
@@ -28,10 +28,9 @@ export class Restaurant implements Entity {
                 .then((restaurants) => (restaurants as any[]).map(r => {
                     return {
                         ...r,
-                        opening_hours: r.opening_hours ?? undefined,
-                        telephone_no: r.telephone_no ?? undefined,
-                        website: r.website ?? undefined,
-                        categories: r.categories.split(","),
+                        categories: r.categories ? r.categories.split(",") : [],
+                        reviewCount: r.reviewCount ?? 0,
+                        restaurant_id: undefined,
                     };
                 }))
         }
@@ -41,14 +40,22 @@ export class Restaurant implements Entity {
     static selectQueryWithCategories() {
         return Query.select()
             .from(Restaurant)
-            .join(JoinType.JOIN,
-                Query.select("restaurant_id AS id", "GROUP_CONCAT(name) AS categories")
+            .join(JoinType.LEFT_JOIN,
+                Query.select("restaurant_id", "GROUP_CONCAT(name) AS categories")
                     .from(RestaurantCategory)
                     .join(JoinType.LEFT_JOIN, Category, "category_id", SqlOperators.EQUAL, "id")
                     .groupBy("restaurant_id")
                     .as("rc"),
                 `${Restaurant.tableName}.id`,
                 SqlOperators.EQUAL,
-                "rc.id");
+                "rc.restaurant_id")
+            .join(JoinType.LEFT_JOIN,
+                Query.select("restaurant_id", "AVG(rating) as rating", "COUNT(rating) as reviewCount")
+                    .from(Review)
+                    .groupBy("restaurant_id")
+                    .as("r"),
+                `${Restaurant.tableName}.id`,
+                SqlOperators.EQUAL,
+                "r.restaurant_id");
     }
 }
