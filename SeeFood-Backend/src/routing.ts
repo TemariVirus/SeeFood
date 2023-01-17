@@ -29,13 +29,17 @@ router.get("/categories", async (_, res) =>
 
 // Get all restaurants that have a category with the given id
 router.get("/categories/:id/restaurants", (req, res) =>
-    checkId(req, res, Entities.Category, async id => res.status(HttpStatusCodes.OK)
-        .send(await Entities.Restaurant
+    checkId(req, res, Entities.Category, async id => {
+        const q = Entities.Restaurant
             .selectQueryWithCategories()
-            .where("rc.id", SqlOperators.IN, Query.select("restaurant_id")
+            .where("rc.restaurant_id", SqlOperators.IN, Query.select("restaurant_id")
                 .from(Entities.RestaurantCategory)
-                .where("category_id", SqlOperators.EQUAL, id))
-            .toRestaurantArray())));
+                .where("category_id", SqlOperators.EQUAL, id));
+        console.log(q.toString());
+        return res.status(HttpStatusCodes.OK)
+            .send(await q
+                .toRestaurantArray());
+    }));
 
 // Get all restaurants
 router.get("/restaurants", async (_, res) =>
