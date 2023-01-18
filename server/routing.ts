@@ -23,7 +23,7 @@ router.get("/ping", async (_, res) =>
 // Get all categories
 router.get("/categories", async (_, res) =>
     res.status(HttpStatusCodes.OK)
-        .send(await Query.select()
+        .json(await Query.select()
             .from(Entities.Category)
             .toArray()));
 
@@ -37,14 +37,14 @@ router.get("/categories/:id/restaurants", (req, res) =>
                 .where("category_id", SqlOperators.EQUAL, id));
         console.log(q.toString());
         return res.status(HttpStatusCodes.OK)
-            .send(await q
+            .json(await q
                 .toRestaurantArray());
     }));
 
 // Get all restaurants
 router.get("/restaurants", async (_, res) =>
     res.status(HttpStatusCodes.OK)
-        .send(await Entities.Restaurant
+        .json(await Entities.Restaurant
             .selectQueryWithCategories()
             .toRestaurantArray()));
 
@@ -52,7 +52,7 @@ router.get("/restaurants", async (_, res) =>
 router.get("/restaurants/:id", (req, res) =>
     checkId(req, res, Entities.Restaurant, async id =>
         res.status(HttpStatusCodes.OK)
-            .send(await Entities.Restaurant
+            .json(await Entities.Restaurant
                 .selectQueryWithCategories()
                 .where(`${Entities.Restaurant.tableName}.id`, SqlOperators.EQUAL, id)
                 .limit(1)
@@ -73,7 +73,7 @@ router.get("/restaurants/:id/comments", (req, res) =>
                     .where("restaurant_id", SqlOperators.EQUAL, id));
         // Union the two queries and return the result
         return res.status(HttpStatusCodes.OK)
-            .send(await Query.union(UnionType.UNION_ALL, reviewQuery, replyQuery)
+            .json(await Query.union(UnionType.UNION_ALL, reviewQuery, replyQuery)
                 .toCommentArray());
     }));
 
@@ -88,7 +88,7 @@ router.get("/users/:id/comments", (req, res) =>
             .where("user_id", SqlOperators.EQUAL, id);
         // Union the two queries and return the result
         return res.status(HttpStatusCodes.OK)
-            .send(await Query.union(UnionType.UNION_ALL, reviewQuery, replyQuery)
+            .json(await Query.union(UnionType.UNION_ALL, reviewQuery, replyQuery)
                 .toCommentArray());
     }));
 
@@ -108,7 +108,7 @@ router.post("/users", async (req, res) => {
 
     // Create user
     return res.status(HttpStatusCodes.CREATED)
-        .send(await Query.insert(Entities.User, user)
+        .json(await Query.insert(Entities.User, user)
             .execute());
 });
 
@@ -134,7 +134,7 @@ router.put("/users", (req, res) =>
 router.delete("/users", (req, res) =>
     checkAuth(req, res, async user =>
         res.status(HttpStatusCodes.OK)
-            .send(await Query.delete()
+            .json(await Query.delete()
                 .from(Entities.User)
                 .where("id", SqlOperators.EQUAL, user.id)
                 .execute())));
@@ -190,7 +190,7 @@ router.post("/comments", (req, res) =>
 
         // Create comment
         return res.status(HttpStatusCodes.CREATED)
-            .send(await Query.insert(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review, comment)
+            .json(await Query.insert(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review, comment)
                 .execute());
     }));
 
@@ -228,7 +228,7 @@ router.put("/comments/:id", async (req, res) =>
 
             // Update comment
             return res.status(HttpStatusCodes.OK)
-                .send(await Query.update(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review)
+                .json(await Query.update(comment instanceof Entities.Reply ? Entities.Reply : Entities.Review)
                     .set(comment)
                     .where("id", SqlOperators.EQUAL, id)
                     .execute());
@@ -254,7 +254,7 @@ router.delete("/comments/:id", async (req, res) =>
 
             // Delete comment
             return res.status(HttpStatusCodes.OK)
-                .send(await Query.delete()
+                .json(await Query.delete()
                     .from(isReply ? Entities.Reply : Entities.Review)
                     .where("id", SqlOperators.EQUAL, id)
                     .execute());

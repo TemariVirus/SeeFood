@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "node build/index.js",
-    "compile": "tsc -w -p ./src"
+    "compile": "tsc -w -P ."
   },
   "author": "",
   "license": "ISC"
