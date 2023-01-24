@@ -1,4 +1,4 @@
-import express from "express";
+import Express from "express";
 import { Query, SqlOperators, UnionType } from "./db-query/query";
 import Entity, * as Entities from "./entities";
 
@@ -13,7 +13,7 @@ export enum HttpStatusCodes {
     NOT_IMPLEMENTED = 501
 }
 
-const router = express.Router();
+const router = Express.Router();
 
 // Check connection with server
 router.get("/ping", async (_, res) =>
@@ -35,7 +35,6 @@ router.get("/categories/:id/restaurants", (req, res) =>
             .where("rc.restaurant_id", SqlOperators.IN, Query.select("restaurant_id")
                 .from(Entities.RestaurantCategory)
                 .where("category_id", SqlOperators.EQUAL, id));
-        console.log(q.toString());
         return res.status(HttpStatusCodes.OK)
             .json(await q
                 .toRestaurantArray());
@@ -219,7 +218,7 @@ router.put("/comments/:id", async (req, res) =>
                 .where("id", SqlOperators.EQUAL, id)
                 .limit(1)
                 .toArray()
-                .then(comments => comments[0]);
+                .then(comments => (comments as Entities.Comment[])[0]);
 
             // Ensure user is the author
             if (original.user_id !== user.id)
@@ -294,7 +293,7 @@ async function checkExists(table: typeof Entity, properties: Record<string, any>
 
     return await Query.exists(innerQuery)
         .execute(values)
-        .then((result) => Object.values(result[0])[0] === 1);
+        .then((result) => Object.values((result as any[])[0])[0] === 1);
 }
 
 // Check authorization header and return user
@@ -316,7 +315,7 @@ async function checkAuth(req, res, then: (user: Entities.User) => any) {
         .where("name", SqlOperators.EQUAL, credentials[0])
         .limit(1)
         .toArray()
-        .then((users) => users[0]));
+        .then((users) => (users as Entities.User[])[0]));
 
     // Check if user exists and password is correct
     if (!user.name || !user.checkPassword(credentials[1]))
