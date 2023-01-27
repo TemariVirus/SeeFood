@@ -1,45 +1,78 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import Counter from './lib/Counter.svelte'
+  import Header from "./lib/Header.svelte";
+  import fish from "./assets/fish.png";
+  import SearchBar from "./lib/SearchBar.svelte";
+  import ItemCard from "./lib/ItemCard.svelte";
+
+  fetch("http://localhost:8000/restaurants")
+    .then((res) => res.json())
+    .then((data) => {
+      populateCards(data);
+    });
+
+  function populateCards(data) {
+    // Wait for dom to load
+    if (document.readyState !== "complete") {
+      setTimeout(() => populateCards(data), 0);
+      return;
+    }
+
+    const cards = document.getElementById("restaurants");
+    data.forEach((restaurant) => {
+      new ItemCard({
+        target: cards,
+        props: {
+          primaryText: restaurant.name,
+          secondaryText: restaurant.categories.join(", "),
+          imageURL: restaurant.logo_url,
+          link: `/restaurants/${restaurant.id}`,
+        },
+      });
+    });
+  }
 </script>
 
+<Header />
+
 <main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer"> 
-      <img src="/vite.svg" class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer"> 
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <img id="main-banner" src={fish} alt="Fish in a market" />
+  <SearchBar />
+  <div class="header-text">Browse</div>
+  <div id="restaurants" class="restaurant-cards" />
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
+  main {
+    position: absolute;
+    margin: 0%;
+    padding: 0%;
+    width: 100%;
+    top: var(--header-height);
+    left: 0;
+    color: var(--text-color);
   }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
+
+  #main-banner {
+    width: 100vw;
+    height: 11.25rem;
+    object-fit: none;
+    object-position: center;
   }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
+
+  .header-text {
+    margin: 0.5625rem;
+    font-size: 3rem;
+    font-family: var(--emphasis-fonts);
+    align-self: center;
   }
-  .read-the-docs {
-    color: #888;
+
+  .restaurant-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17.25rem, 1fr));
+    grid-gap: 0.5625rem;
+    justify-items: center;
+    align-items: center;
+    align-content: center;
+    margin: 2.4375rem;
   }
 </style>

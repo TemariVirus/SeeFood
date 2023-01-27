@@ -32,7 +32,7 @@ export class Restaurant implements Entity {
                         reviewCount: r.reviewCount ?? 0,
                         restaurant_id: undefined,
                     };
-                }))
+                }));
         }
     }
 
