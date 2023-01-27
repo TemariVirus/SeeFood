@@ -6,9 +6,10 @@
 
 <header>
   <nav>
-    <a href="/">
-      <button id="title-btn" class="header-btn">SeeFood</button>
-    </a>
+    <div id="title-btn" class="header-btn">
+      <linke to="/" />
+      SeeFood
+    </div>
     <div id="header-btns">
       <a href="/about">
         <button class="header-btn">About</button>
@@ -56,7 +57,7 @@
     display: flex;
     margin-left: auto;
   }
-
+  
   .header-btn {
     font-size: 1.2rem;
     border-radius: 0px;
@@ -64,6 +65,7 @@
     padding-left: 0.75rem;
     padding-right: 0.75rem;
     background-color: transparent;
+    text-align: center;
   }
 
   #title-btn {
