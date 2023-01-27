@@ -4,7 +4,7 @@
   --emphasis-fonts: Georgia, "Times New Roman", Times, serif;
 
   font-family: var(--default-fonts);
-  font-size: 2em;
+  font-size: 20px;
   font-weight: normal;
 
   color-scheme: dark light;

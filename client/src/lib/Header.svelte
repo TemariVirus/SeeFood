@@ -1,5 +1,7 @@
 <script lang="ts">
   import guestPfp from "../assets/guest-pfp.svg";
+  export let username = "Guest";
+  export let pfp = guestPfp;
 </script>
 
 <header>
@@ -14,17 +16,19 @@
       <a href="/categories">
         <button class="header-btn">Categories</button>
       </a>
-      <button class="header-btn user-profile-btn">
-        <div id="username">Guest</div>
-        <img src={guestPfp} alt="Profile" />
-      </button>
+      <a href="/user">
+        <button class="header-btn user-profile-btn">
+          <div id="username">{username}</div>
+          <img src={pfp} alt="Profile" />
+        </button>
+      </a>
     </div>
   </nav>
 </header>
 
 <style>
   :root {
-    --header-height: 2.5rem;
+    --header-height: 3rem;
     --header-background-color: #406477;
   }
 
@@ -37,7 +41,7 @@
     width: 100%;
     z-index: 99;
   }
-  
+
   nav {
     display: flex;
     height: var(--header-height);
@@ -83,8 +87,10 @@
   .user-profile-btn img {
     border-radius: 50%;
     padding-left: 0.75rem;
-    width: 60px;
-    height: 60px;
+    width: 1.875rem;
+    height: 1.875rem;
     margin: auto;
+    object-fit: contain;
+    object-position: center;
   }
 </style>
