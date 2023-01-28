@@ -4,11 +4,11 @@
   --emphasis-fonts: Georgia, "Times New Roman", Times, serif;
 
   font-family: var(--default-fonts);
-  font-size: 2em;
+  font-size: 130%;
   font-weight: normal;
 
   color-scheme: dark light;
-  color: #EEEEEE;
+  color: #eeeeee;
   background-color: #454545;
 
   font-synthesis: none;
@@ -23,24 +23,7 @@
   padding: auto;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-main {
+section {
   position: absolute;
   margin: 0%;
   padding: 0%;
@@ -48,6 +31,15 @@ main {
   top: var(--header-height);
   left: 0;
   color: var(--text-color);
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
 }
 
 h1 {

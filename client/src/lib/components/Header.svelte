@@ -1,5 +1,5 @@
 <script lang="ts">
-  import guestPfp from "../lib/images/guest-pfp.svg";
+  import guestPfp from "$lib/images/guest-pfp.svg";
 </script>
 
 <header>
