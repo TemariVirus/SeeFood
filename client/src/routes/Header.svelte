@@ -1,15 +1,12 @@
 <script lang="ts">
-  import guestPfp from "../assets/guest-pfp.svg";
-  export let username = "Guest";
-  export let pfp = guestPfp;
+  import guestPfp from "../lib/images/guest-pfp.svg";
 </script>
 
 <header>
   <nav>
-    <div id="title-btn" class="header-btn">
-      <linke to="/" />
-      SeeFood
-    </div>
+    <a href="/">
+      <button id="title-btn" class="header-btn">SeeFood</button>
+    </a>
     <div id="header-btns">
       <a href="/about">
         <button class="header-btn">About</button>
@@ -17,19 +14,17 @@
       <a href="/categories">
         <button class="header-btn">Categories</button>
       </a>
-      <a href="/user">
-        <button class="header-btn user-profile-btn">
-          <div id="username">{username}</div>
-          <img src={pfp} alt="Profile" />
-        </button>
-      </a>
+      <button class="header-btn user-profile-btn">
+        <div id="username">Guest</div>
+        <img src={guestPfp} alt="Profile" />
+      </button>
     </div>
   </nav>
 </header>
 
 <style>
   :root {
-    --header-height: 3rem;
+    --header-height: 2.5rem;
     --header-background-color: #406477;
   }
 
@@ -57,7 +52,7 @@
     display: flex;
     margin-left: auto;
   }
-  
+
   .header-btn {
     font-size: 1.2rem;
     border-radius: 0px;
@@ -65,7 +60,6 @@
     padding-left: 0.75rem;
     padding-right: 0.75rem;
     background-color: transparent;
-    text-align: center;
   }
 
   #title-btn {
@@ -89,10 +83,8 @@
   .user-profile-btn img {
     border-radius: 50%;
     padding-left: 0.75rem;
-    width: 1.875rem;
-    height: 1.875rem;
+    width: 60px;
+    height: 60px;
     margin: auto;
-    object-fit: contain;
-    object-position: center;
   }
 </style>

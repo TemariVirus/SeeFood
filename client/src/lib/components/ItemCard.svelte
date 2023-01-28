@@ -48,12 +48,12 @@
     .primary-text {
         font-size: 1.875rem;
         max-width: calc(var(--max-width) - 2 * var(--padding));
-        line-height: 2.125rem;
+        line-height: 1.875rem;
     }
     
     .secondary-text {
         font-size: 1rem;
         max-width: calc(var(--max-width) - 2 * var(--padding));
-        line-height: 1.25rem;
+        line-height: 1rem;
     }
 </style>
