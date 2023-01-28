@@ -83,8 +83,8 @@
   .user-profile-btn img {
     border-radius: 50%;
     padding-left: 0.75rem;
-    width: 60px;
-    height: 60px;
+    widows: auto;
+    height: calc(var(--header-height) - 0.6rem);
     margin: auto;
   }
 </style>
