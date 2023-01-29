@@ -8,6 +8,7 @@
   import type { IComment } from "$lib/server/entities";
 
   export let comment: undefined | IComment = undefined;
+  export let show = false;
 
   const isReply = comment?.is_reply ?? false;
   let newComment = comment
@@ -20,9 +21,8 @@
       };
 
   function cancel() {
-    if (comment) {
-      
-    } else {
+    show = false;
+    if (!comment) {
       newComment.content = "";
       newComment.rating = 0;
     }
@@ -30,7 +30,26 @@
 
   function done() {
     if (comment) {
-
+      fetch(commentsPutUrl(comment.id, comment.is_reply), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Basic " + btoa("Admin:1234"),
+        },
+        body: JSON.stringify({
+          content: newComment.content?.trim(),
+          rating: newComment.rating,
+        }),
+      })
+      .then(async (res) => {
+        if (res.ok) {
+          alert("Comment edited successfully");
+          // TODO: Refresh comments
+        } else {
+          const message = await res.json();
+          alert(message ?? "Error editing comment");
+        }
+      });
     } else {
       fetch(commentsPostUrl(newComment.is_reply), {
         method: "POST",

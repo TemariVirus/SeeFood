@@ -6,11 +6,15 @@
   import deleteIcon from "$lib/images/delete.svg";
 
   import { commentsDeleteUrl } from "$lib/urls";
+  import CommentEditer from "$lib/components/commentEditer.svelte";
   import type { IComment } from "$lib/server/entities";
 
   export let data: IComment;
+  let showEditor = false;
 
-  function editComment() {}
+  function editComment() {
+    showEditor = true;
+  }
 
   function deleteComment() {
     fetch(commentsDeleteUrl(data.id, data.is_reply), {
@@ -48,7 +52,9 @@
         </div>
       </div>
     </div>
-    {#if data.rating !== undefined}
+    {#if showEditor}
+      <CommentEditer comment={data} bind:show={showEditor} />
+    {:else if data.rating !== undefined}
       <div class="star-container">
         {#each Array.from({ length: 5 }) as _, i}
           <img
@@ -58,8 +64,8 @@
           />
         {/each}
       </div>
+      <div class="mt-1 long-text">{data.content}</div>
     {/if}
-    <div class="mt-1 long-text">{data.content}</div>
   </div>
 {/if}
 
