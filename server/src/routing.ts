@@ -17,7 +17,7 @@ const router = Express.Router();
 
 // Check connection with server
 router.get("/ping", async (_, res) =>
-  res.status(HttpStatusCodes.OK).send("pong")
+  res.status(HttpStatusCodes.OK).json("pong")
 );
 
 // Get all categories
@@ -57,59 +57,68 @@ router.get("/restaurants", async (_, res) =>
 
 // Get a restaurant with the given id
 router.get("/restaurants/:id", (req, res) =>
-  checkIdExists(req.params.id?.toString(), res, Entities.Restaurant, async (id) =>
-    res.status(HttpStatusCodes.OK).json(
-      await Entities.Restaurant.selectQueryWithCategories()
-        .where(`${Entities.Restaurant.tableName}.id`, SqlOperators.EQUAL, id)
-        .limit(1)
-        .toRestaurantArray()
-        .then((restaurants) => restaurants[0])
-    )
+  checkIdExists(
+    req.params.id?.toString(),
+    res,
+    Entities.Restaurant,
+    async (id) =>
+      res.status(HttpStatusCodes.OK).json(
+        await Entities.Restaurant.selectQueryWithCategories()
+          .where(`${Entities.Restaurant.tableName}.id`, SqlOperators.EQUAL, id)
+          .limit(1)
+          .toRestaurantArray()
+          .then((restaurants) => restaurants[0])
+      )
   )
 );
 
 // Get all comments for a restaurant with the given id
 router.get("/restaurants/:id/comments", (req, res) =>
-  checkIdExists(req.params.id?.toString(), res, Entities.Restaurant, async (id) => {
-    const reviewQuery = Query.select(
-      "id",
-      "content",
-      "rating",
-      "restaurant_id AS parent_id",
-      "date",
-      "user_id",
-      "FALSE AS is_reply"
-    )
-      .from(Entities.Review)
-      .where("restaurant_id", SqlOperators.EQUAL, id);
-    const replyQuery = Query.select(
-      "id",
-      "content",
-      "NULL",
-      "review_id",
-      "date",
-      "user_id",
-      "TRUE"
-    )
-      .from(Entities.Reply)
-      .where(
+  checkIdExists(
+    req.params.id?.toString(),
+    res,
+    Entities.Restaurant,
+    async (id) => {
+      const reviewQuery = Query.select(
+        "id",
+        "content",
+        "rating",
+        "restaurant_id AS parent_id",
+        "date",
+        "user_id",
+        "FALSE AS is_reply"
+      )
+        .from(Entities.Review)
+        .where("restaurant_id", SqlOperators.EQUAL, id);
+      const replyQuery = Query.select(
+        "id",
+        "content",
+        "NULL",
         "review_id",
-        SqlOperators.IN,
-        Query.select("id")
-          .from(Entities.Review)
-          .where("restaurant_id", SqlOperators.EQUAL, id)
-      );
-    // Union the two queries and return the result
-    return res
-      .status(HttpStatusCodes.OK)
-      .json(
-        await Query.union(
-          UnionType.UNION_ALL,
-          reviewQuery,
-          replyQuery
-        ).toCommentArray()
-      );
-  })
+        "date",
+        "user_id",
+        "TRUE"
+      )
+        .from(Entities.Reply)
+        .where(
+          "review_id",
+          SqlOperators.IN,
+          Query.select("id")
+            .from(Entities.Review)
+            .where("restaurant_id", SqlOperators.EQUAL, id)
+        );
+      // Union the two queries and return the result
+      return res
+        .status(HttpStatusCodes.OK)
+        .json(
+          await Query.union(
+            UnionType.UNION_ALL,
+            reviewQuery,
+            replyQuery
+          ).toCommentArray()
+        );
+    }
+  )
 );
 
 // Get all comments for a user with the given id
@@ -155,14 +164,14 @@ router.post("/users", async (req, res) => {
   // Ensure request is formatted correctly
   const request = Entities.User.fromNewRequest(req.body);
   if (!request.success)
-    return res.status(HttpStatusCodes.BAD_REQUEST).send(request.data);
+    return res.status(HttpStatusCodes.BAD_REQUEST).json(request.data);
   const user = request.data as Entities.User;
 
   // Ensure name is unique
   if (await checkExists(Entities.User, { name: user.name }))
     return res
       .status(HttpStatusCodes.BAD_REQUEST)
-      .send("Name is already taken.");
+      .json("Name is already taken.");
 
   // Create user
   return res
@@ -176,13 +185,13 @@ router.put("/users", (req, res) =>
     // Ensure request is formatted correctly
     const request = Entities.User.fromUpdateRequest(req.body);
     if (!request.success)
-      return res.status(HttpStatusCodes.BAD_REQUEST).send(request.data);
+      return res.status(HttpStatusCodes.BAD_REQUEST).json(request.data);
     const userUpdate = request.data as Entities.User;
 
     // Update user
     return res
       .status(HttpStatusCodes.OK)
-      .send(
+      .json(
         await Query.update(Entities.User)
           .set(userUpdate)
           .where("id", SqlOperators.EQUAL, user.id)
@@ -210,11 +219,15 @@ router.post("/comments", (req, res) =>
   checkAuth(req, res, (user) =>
     checkBoolean(req, res, "isReply", async (isReply) => {
       // Ensure comment is formatted correctly
+      if (req.body.content) {
+        req.body.content = req.body.content.trim();
+        if (req.body.content.length === 0) req.body.content = undefined;
+      }
       req.body.is_reply = isReply;
       req.body.user_id = user.id;
       const request = Entities.Comment.fromNewRequest(req.body);
       if (!request.success)
-        return res.status(HttpStatusCodes.BAD_REQUEST).send(request.data);
+        return res.status(HttpStatusCodes.BAD_REQUEST).json(request.data);
       const comment = request.data as Entities.Review | Entities.Reply;
 
       // Ensure user has not already reviewed restaurant
@@ -227,7 +240,7 @@ router.post("/comments", (req, res) =>
         )
           return res
             .status(HttpStatusCodes.BAD_REQUEST)
-            .send("You have already rated or reviewed this restaurant.");
+            .json("You have already rated or reviewed this restaurant.");
       }
 
       // Ensure parent exists
@@ -242,13 +255,13 @@ router.post("/comments", (req, res) =>
         if (!review)
           return res
             .status(HttpStatusCodes.BAD_REQUEST)
-            .send("Parent review does not exist.");
+            .json("Parent review does not exist.");
 
         // Ensure parent review has content
         if (!review.content)
           return res
             .status(HttpStatusCodes.BAD_REQUEST)
-            .send("Cannot reply to a review with no content.");
+            .json("Cannot reply to a review with no content.");
       } else {
         if (
           !(await checkExists(Entities.Restaurant, {
@@ -257,7 +270,7 @@ router.post("/comments", (req, res) =>
         )
           return res
             .status(HttpStatusCodes.BAD_REQUEST)
-            .send("Parent restaurant does not exist.");
+            .json("Parent restaurant does not exist.");
       }
 
       // Create comment
@@ -283,7 +296,7 @@ router.put("/comments", async (req, res) =>
       req.body.is_reply = isReply;
       const request = Entities.Comment.fromUpdateRequest(req.body);
       if (!request.success)
-        return res.status(HttpStatusCodes.BAD_REQUEST).send(request.data);
+        return res.status(HttpStatusCodes.BAD_REQUEST).json(request.data);
       const comment = request.data as Entities.Review | Entities.Reply;
 
       // Ensure comment exists
@@ -303,7 +316,7 @@ router.put("/comments", async (req, res) =>
           if (original.user_id !== user.id)
             return res
               .status(HttpStatusCodes.FORBIDDEN)
-              .send("You are not the author of this comment.");
+              .json("You are not the author of this comment.");
 
           // Update comment
           return res.status(HttpStatusCodes.OK).json(
@@ -336,7 +349,7 @@ router.delete("/comments", async (req, res) =>
           ) {
             return res
               .status(HttpStatusCodes.FORBIDDEN)
-              .send("You are not the author of this comment.");
+              .json("You are not the author of this comment.");
           }
 
           // Delete comment
@@ -357,7 +370,7 @@ function checkBoolean(req, res, key: string, then: (bool: boolean) => any) {
   if (boolString !== "true" && boolString !== "false") {
     return res
       .status(HttpStatusCodes.BAD_REQUEST)
-      .send("isReply must be specified as a boolean. (true/false)");
+      .json("isReply must be specified as a boolean. (true/false)");
   }
 
   return then(boolString === "true");
@@ -373,13 +386,13 @@ async function checkIdExists(
   // Ensure id is a number
   const id = Number.parseInt(idString);
   if (!Number.isSafeInteger(id))
-    return res.status(HttpStatusCodes.BAD_REQUEST).send("Invalid id.");
+    return res.status(HttpStatusCodes.BAD_REQUEST).json("Invalid id.");
 
   // Ensure entity exists
   if (!(await checkExists(table, { id: id })))
     return res
       .status(HttpStatusCodes.NOT_FOUND)
-      .send(table.prototype.constructor.name + " not found.");
+      .json(table.prototype.constructor.name + " not found.");
 
   return then(id);
 }
@@ -414,14 +427,14 @@ async function checkAuth(req, res, then: (user: Entities.User) => any) {
   if (authHeader.length !== 2 || authHeader[0] !== "Basic")
     return res
       .status(HttpStatusCodes.UNAUTHORIZED)
-      .send("Ensure that you are using basic authentication.");
+      .json("Ensure that you are using basic authentication.");
   const credentials = Buffer.from(authHeader[1], "base64")
     .toString()
     .split(":");
   if (credentials.length !== 2)
     return res
       .status(HttpStatusCodes.BAD_REQUEST)
-      .send("Credentials were formmatted incorrectly.");
+      .json("Credentials were formmatted incorrectly.");
 
   // Get user in database
   const user = new Entities.User();
@@ -439,7 +452,7 @@ async function checkAuth(req, res, then: (user: Entities.User) => any) {
   if (!user.name || !user.checkPassword(credentials[1]))
     return res
       .status(HttpStatusCodes.UNAUTHORIZED)
-      .send("Incorrect username or password.");
+      .json("Incorrect username or password.");
 
   return then(user);
 }

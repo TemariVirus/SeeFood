@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import type { IRestaurant } from "$lib/server/entities";
   import RestaurantInfo from "$lib/components/restaurantInfo.svelte";
 
@@ -10,6 +11,6 @@
   <meta name="Restaurant page" content="{data.name} details" />
 </svelte:head>
 
-<section>
-  <RestaurantInfo restaurant={data} />
-</section>
+<RestaurantInfo restaurant={data}>
+  <a href="{$page.url.href}/comments#reviews">Show Reviews</a>
+</RestaurantInfo>

@@ -15,7 +15,7 @@
 <section>
   <img id="main-banner" src={fish} alt="Fish in a market" />
   <SearchBar />
-  <div class="header-text">Browse</div>
+  <p class="header-text">Browse</p>
   <div class="restaurant-cards">
     {#each data.restaurants as r}
       <ItemCard
@@ -32,7 +32,7 @@
   #main-banner {
     width: 100vw;
     height: 11.25rem;
-    object-fit: none;
+    object-fit: cover;
     object-position: center;
   }
 

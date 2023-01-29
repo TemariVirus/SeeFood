@@ -1,0 +1,1 @@
+run "npm start" in the command line in the tis folder to start both the server and the client
