@@ -1,33 +1,69 @@
 <script lang="ts">
-  import type { IRestaurant } from "$lib/server/entities";
+  import { page } from "$app/stores";
+  import Comment from "$lib/components/comment.svelte";
+  import type { IRestaurant, IComment } from "$lib/server/entities";
 
   export let restaurant: IRestaurant;
+  export let comments: undefined | IComment[] = undefined;
 </script>
 
-<img class="main-img" src={restaurant.main_img_url} alt="In the restaurant" />
-<p id="name">{restaurant.name}</p>
-<p id="categories">{restaurant.categories}</p>
+<div class="info-container">
+  <img class="main-img" src={restaurant.main_img_url} alt="In the restaurant" />
+  <p class="text-xl no-margin">{restaurant.name}</p>
+  <p class="text-m">{restaurant.categories}</p>
 
-<div id="rating" />
-<div id="details">
-  <p id="opening-hours">Opening Hours: {restaurant.opening_hours}</p>
-  <p id="phone">Telephone No.: {restaurant.telephone_no}</p>
-  <p id="website">
-    Website: <a href="http://{restaurant.website}">{restaurant.website}</a>
-  </p>
+  <div id="rating" />
+  <div>
+    <p>Opening Hours: {restaurant.opening_hours}</p>
+    <p>Telephone No.: {restaurant.telephone_no}</p>
+    <p>
+      Website: <a href="http://{restaurant.website}">{restaurant.website}</a>
+    </p>
+  </div>
+
+  <p class="text-l">About</p>
+  <p>{restaurant.description}</p>
+
+  <p id="reviews" class="text-l">Reviews</p>
+  <div class="write-a-review">
+    
+  </div>
+
+  {#if comments}
+    <div class="comment-container">
+      {#if comments.length === 0}
+        <p class="text-center text-l">No comments</p>
+      {:else}
+        {#each comments as comment}
+          <Comment data={comment} />
+        {/each}
+      {/if}
+    </div>
+  {:else}
+    <a href="{$page.url.href}/comments#reviews">Show Reviews</a>
+  {/if}
 </div>
-
-<p id="about">About</p>
-<p id="about-text">{restaurant.description}</p>
-
-<p id="reviews">Reviews</p>
-<div class="write-a-review" />
 
 <style>
   p {
     margin: 0;
-    padding: auto;
     margin-bottom: 1.125rem;
+    padding: auto;
+    white-space: pre-line;
+  }
+
+  .info-container {
+    padding-left: 3.75rem;
+    padding-right: 3.75rem;
+    display: flex;
+    justify-items: center;
+    align-items: left;
+    flex-direction: column;
+    word-wrap: break-word;
+  }
+
+  .comment-container {
+    margin-bottom: 1rem;
   }
 
   .main-img {
@@ -38,20 +74,23 @@
     object-position: center;
   }
 
-  #name {
-    font-size: 2.25rem;
+  .no-margin {
     margin: 0;
   }
 
-  #categories {
-    font-size: 1.5rem;
+  .text-m {
+    font-size: 1.25rem;
   }
 
-  #about {
+  .text-l {
     font-size: 1.6875rem;
   }
 
-  #reviews {
-    font-size: 1.6875rem;
+  .text-xl {
+    font-size: 2.25rem;
+  }
+
+  .text-center {
+    text-align: center;
   }
 </style>

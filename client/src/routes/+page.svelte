@@ -8,8 +8,8 @@
 </script>
 
 <svelte:head>
-  <title>Home</title>
-  <meta name="description" content="Svelte demo app" />
+  <title>SeeFood Restaurant Reviews</title>
+  <meta name="Home page" content="All restaurants" />
 </svelte:head>
 
 <section>

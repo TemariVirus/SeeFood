@@ -17,11 +17,13 @@
     margin-top: 3rem;
     margin-bottom: 3rem;
   }
-
+  
   input {
     width: 100%;
     font-size: 1.5rem;
     padding: 0.5rem;
+    color: #000;
+    background-color: #fff;
   }
 
   button {
