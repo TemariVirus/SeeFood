@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "cd ./server/ && npm install && npx tsc -P . && cd ../client/ && npm install && cd ../ && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd ./server/ && npm start",
     "client": "cd ./client/ && npm run dev -- --open",
     "compile": "cd ./server/ && npm run compile"
