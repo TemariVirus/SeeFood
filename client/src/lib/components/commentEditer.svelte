@@ -40,8 +40,7 @@
           content: newComment.content?.trim(),
           rating: newComment.rating,
         }),
-      })
-      .then(async (res) => {
+      }).then(async (res) => {
         if (res.ok) {
           alert("Comment edited successfully");
           // TODO: Refresh comments
@@ -80,9 +79,22 @@
     <div class="star-container">
       {#each [1, 2, 3, 4, 5] as star}
         {#if star <= (newComment?.rating ?? 0)}
-          <img class="star" src={StarFull} alt="Full star" />
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img
+            class="star"
+            src={StarFull}
+            alt="Full star"
+            on:click={() =>
+              (newComment.rating = newComment.rating == star ? 0 : star)}
+          />
         {:else}
-          <img class="star" src={StarEmpty} alt="Empty star" />
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <img
+            class="star"
+            src={StarEmpty}
+            alt="Empty star"
+            on:click={() => (newComment.rating = star)}
+          />
         {/if}
       {/each}
     </div>
@@ -116,6 +128,7 @@
 
   .star {
     width: 2rem;
+    cursor: pointer;
   }
 
   .comment-text {
