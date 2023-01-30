@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Zemogus/SeeFood#readme",
   "dependencies": {
-    "concurrently": "^7.6.0"
+    "concurrently": "^7.6.0",
+    "node": "^18.13.0"
   }
 }

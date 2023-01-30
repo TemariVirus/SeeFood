@@ -52,18 +52,21 @@
         </div>
       </div>
     </div>
+   
     {#if showEditor}
       <CommentEditer comment={data} bind:show={showEditor} />
-    {:else if data.rating !== undefined}
-      <div class="star-container">
-        {#each Array.from({ length: 5 }) as _, i}
-          <img
-            src={i < data.rating ? starFull : starEmpty}
-            alt={i < data.rating ? "Full star" : "Empty star"}
-            class="star"
-          />
-        {/each}
-      </div>
+    {:else}
+      {#if data.rating !== undefined}
+        <div class="star-container">
+          {#each Array.from({ length: 5 }) as _, i}
+            <img
+              src={i < data.rating ? starFull : starEmpty}
+              alt={i < data.rating ? "Full star" : "Empty star"}
+              class="star"
+            />
+          {/each}
+        </div>
+      {/if}
       <div class="mt-1 long-text">{data.content}</div>
     {/if}
   </div>
