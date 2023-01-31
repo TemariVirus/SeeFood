@@ -1,4 +1,4 @@
-export const apiUrl = "http://localhost:8000/";
+export const apiUrl = '/';
 export const restaurantGetUrl = `${apiUrl}restaurants/`;
 
 export const commentsGetUrl = (id: number) =>

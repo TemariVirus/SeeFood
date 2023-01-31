@@ -1,7 +1,7 @@
 import type { IComment } from "$lib/server/entities";
 import { restaurantGetUrl, commentsGetUrl } from "$lib/urls";
 
-export const prerender = true;
+export const prerender = 'auto';
 
 export const load = async ({ params }: any) => {
   return {

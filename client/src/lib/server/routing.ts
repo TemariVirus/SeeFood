@@ -1,6 +1,5 @@
 import { Query, SqlOperators, UnionType } from "./db-query/query";
 import Entity, * as Entities from "./entities";
-import Express from "express";
 
 export enum HttpStatusCodes {
   OK = 200,
