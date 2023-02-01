@@ -23,6 +23,7 @@
     padding: var(--padding);
     background-color: #333;
     max-width: var(--max-width);
+    align-items: center;
   }
 
   .item-card div {

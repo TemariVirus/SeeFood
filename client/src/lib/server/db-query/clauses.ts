@@ -19,11 +19,13 @@ export abstract class Compare extends Base {
     this.column = column;
     this.operator = operator;
 
-    // Escape strings with quotes
-    if (typeof value === "string") value = `"${value}"`;
+    // Escape strings
+    if (typeof value === "string") value = `"${value.replaceAll('"', '\\"')}"`;
     if (Array.isArray(value)) {
-      // Escape strings with quotes
-      value = value.map((v) => (typeof v === "string" ? `"${v}"` : v));
+      // Escape strings
+      value = value.map((v) =>
+        typeof v === "string" ? `"${v.replaceAll('"', '\\"')}"` : v
+      );
       value = `(${value.join(",")})`;
     }
     // If value is undefined, use a placeholder
@@ -192,7 +194,7 @@ export class Union extends Base {
   }
 
   public toString(): string {
-    return this.tables.map(t => t.toString()!).join(` ${this.unionType} `);
+    return this.tables.map((t) => t.toString()!).join(` ${this.unionType} `);
   }
 }
 

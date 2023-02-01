@@ -6,7 +6,7 @@
   import deleteIcon from "$lib/images/delete.svg";
 
   import { commentsDeleteUrl } from "$lib/urls";
-  import CommentEditer from "$lib/components/commentEditer.svelte";
+  import CommentEditor from "$lib/components/commentEditor.svelte";
   import type { IComment } from "$lib/server/entities";
 
   export let data: IComment;
@@ -52,9 +52,9 @@
         </div>
       </div>
     </div>
-   
+
     {#if showEditor}
-      <CommentEditer comment={data} bind:show={showEditor} />
+      <CommentEditor comment={data} bind:show={showEditor} />
     {:else}
       {#if data.rating !== undefined}
         <div class="star-container">

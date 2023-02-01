@@ -4,4 +4,10 @@ import RestaurantCategoryController from "./restaurantCategoryController";
 import RestaurantController from "./restaurantController";
 import UserController from "./userController";
 
-export { CategoryController, CommentController, RestaurantCategoryController, RestaurantController, UserController };
+export {
+  CategoryController,
+  CommentController,
+  RestaurantCategoryController,
+  RestaurantController,
+  UserController,
+};

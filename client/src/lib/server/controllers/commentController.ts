@@ -53,38 +53,34 @@ export default class CommentController {
         .reverse() // Reverse so that replies are by earliest first
         .sort((a, b) => a.parentId - b.parentId);
 
-
       if (replies.length === 0)
         return reviews.map((review) => ({ review, replies: [] }));
 
       // Get array of indices where parent id changes
-      const splits = replies.reduce((acc, reply, i) => {
-        // Skip first element
-        if (i === 0) return acc;
+      const splits = replies.reduce(
+        (acc, reply, i) => {
+          // Skip first element
+          if (i === 0) return acc;
 
-        if (replies[i - 1].parentId !== reply.parentId) acc.push(i);
-        return acc;
-      }, [0]);
+          if (replies[i - 1].parentId !== reply.parentId) acc.push(i);
+          return acc;
+        },
+        [0]
+      );
       splits.push(replies.length);
-      // Group replies with their parent review
-      console.log(this.filter((c) => !c.isReply)
-        .map((review, i) => {
-          return {
-            review,
-            replies: replies.slice(splits[i], splits[i + 1]),
-          };
-        }));
 
+      // Group replies with their parent review
       let j = 0;
-      return reviews
-        .map((review) => { 
-          return {
-            review,
-            replies: replies[splits[Math.min(j, splits.length - 2)]].parentId === review.id ?
-              replies.slice(splits[j], splits[++j]) :
-              [],
-          };
-        }, []);
+      return reviews.map((review) => {
+        return {
+          review,
+          replies:
+            replies[splits[Math.min(j, splits.length - 2)]].parentId ===
+            review.id
+              ? replies.slice(splits[j], splits[++j])
+              : [],
+        };
+      }, []);
     };
   }
 
@@ -98,7 +94,7 @@ export default class CommentController {
       userId: entity.user_id,
       userName: entity.user_name,
       isReply: entity.is_reply === 1,
-    }
+    };
   }
 
   // Get all comments for a restaurant with the given id
@@ -133,6 +129,40 @@ export default class CommentController {
           .from(this.ReviewTableName)
           .where("restaurant_id", SqlOperators.EQUAL, id)
       );
+
+    // Union the two queries and return the result
+    return await Query.union(
+      UnionType.UNION_ALL,
+      reviewQuery,
+      replyQuery
+    ).toCommentArray();
+  }
+
+  public static async getByUserId(idString: any): Promise<IComment[]> {
+    const id = await checkIdExists(idString, UserController.tableName);
+
+    const reviewQuery = Query.select(
+      "id",
+      "content",
+      "rating",
+      "restaurant_id AS parent_id",
+      "date",
+      "user_id",
+      "FALSE AS is_reply"
+    )
+      .from(this.ReviewTableName)
+      .where("user_id", SqlOperators.EQUAL, id);
+    const replyQuery = Query.select(
+      "id",
+      "content",
+      "NULL",
+      "review_id",
+      "date",
+      "user_id",
+      "TRUE"
+    )
+      .from(this.ReplyTableName)
+      .where("user_id", SqlOperators.EQUAL, id);
 
     // Union the two queries and return the result
     return await Query.union(

@@ -27,53 +27,51 @@
     }
   }
 
-  function done() {
+  function done() {}
 
-  }
-
-// function done() {
-//     if (comment) {
-//       fetch(commentsPutUrl(comment.id, comment.isReply), {
-//         method: "PUT",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: "Basic " + btoa("Admin:1234"),
-//         },
-//         body: JSON.stringify({
-//           content: newComment.content?.trim(),
-//           rating: newComment.rating,
-//         }),
-//       }).then(async (res) => {
-//         if (res.ok) {
-//           alert("Comment edited successfully");
-//           // TODO: Refresh comments
-//         } else {
-//           const message = await res.json();
-//           alert(message ?? "Error editing comment");
-//         }isReply);
-//     } else {
-//       fetch(commentsPostUrl(newComment.is_reply), {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: "Basic " + btoa("Admin:1234"),
-//         },
-//         body: JSON.stringify({
-//           content: newComment.content?.trim(),
-//           rating: newComment.rating,
-//           parent_id: newComment.parent_id,
-//         }),
-//       }).then(async (res) => {
-//         if (res.ok) {
-//           alert("Comment posted successfully");
-//           // TODO: Refresh comments
-//         } else {
-//           const message = await res.json();
-//           alert(message ?? "Error posting comment");
-//         }
-//       });
-//     }
-//   }
+  // function done() {
+  //     if (comment) {
+  //       fetch(commentsPutUrl(comment.id, comment.isReply), {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: "Basic " + btoa("Admin:1234"),
+  //         },
+  //         body: JSON.stringify({
+  //           content: newComment.content?.trim(),
+  //           rating: newComment.rating,
+  //         }),
+  //       }).then(async (res) => {
+  //         if (res.ok) {
+  //           alert("Comment edited successfully");
+  //           // TODO: Refresh comments
+  //         } else {
+  //           const message = await res.json();
+  //           alert(message ?? "Error editing comment");
+  //         }isReply);
+  //     } else {
+  //       fetch(commentsPostUrl(newComment.is_reply), {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: "Basic " + btoa("Admin:1234"),
+  //         },
+  //         body: JSON.stringify({
+  //           content: newComment.content?.trim(),
+  //           rating: newComment.rating,
+  //           parent_id: newComment.parent_id,
+  //         }),
+  //       }).then(async (res) => {
+  //         if (res.ok) {
+  //           alert("Comment posted successfully");
+  //           // TODO: Refresh comments
+  //         } else {
+  //           const message = await res.json();
+  //           alert(message ?? "Error posting comment");
+  //         }
+  //       });
+  //     }
+  //   }
 </script>
 
 <div class="container">

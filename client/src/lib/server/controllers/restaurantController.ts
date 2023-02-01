@@ -65,17 +65,43 @@ export default class RestaurantController {
     };
   }
 
-  public static async getAll(): Promise<IRestaurant[]> {
-    return await this.selectQueryTemplate()
+  public static async getAll(likeName: string = ""): Promise<IRestaurant[]> {
+    const query = this.selectQueryTemplate().where(
+      "`name`",
+      SqlOperators.LIKE,
+      `%${likeName}%`
+    );
+    return await query
       .toArray()
-      .then(restaurants => restaurants.map(this.entityToRestaurant));
+      .then((restaurants) => restaurants.map(this.entityToRestaurant));
   }
 
   public static async getOne(idString: any): Promise<IRestaurant> {
     const id = await checkIdExists(idString, this.tableName);
+
     return await this.selectQueryTemplate()
       .where(`${this.tableName}.id`, SqlOperators.EQUAL, id)
       .toArray()
-      .then(restaurants => this.entityToRestaurant(restaurants[0]));
+      .then((restaurants) => this.entityToRestaurant(restaurants[0]));
+  }
+
+  public static async getByCategoryId(
+    idString: any,
+    likeName: string = ""
+  ): Promise<IRestaurant[]> {
+    const id = await checkIdExists(idString, CategoryController.tableName);
+    const query = this.selectQueryTemplate()
+      .where(
+        "rc.restaurant_id",
+        SqlOperators.IN,
+        Query.select("restaurant_id")
+          .from(RestaurantCategoryController.tableName)
+          .where("category_id", SqlOperators.EQUAL, id)
+      )
+      .and("`name`", SqlOperators.LIKE, `%${likeName}%`);
+
+    return await query
+      .toArray()
+      .then((restaurants) => restaurants.map(this.entityToRestaurant));
   }
 }

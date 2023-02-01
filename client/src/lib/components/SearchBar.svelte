@@ -1,11 +1,17 @@
-<script>
-  export let searchTerm = "";
-  export let search = () => {};
+<script lang="ts">
+  let searchTerm = "";
+
+  export let placeholder = "Search";
+  export let search: (searchTerm: string) => null | undefined;
 </script>
 
 <form>
-  <input type="text" bind:value={searchTerm} />
-  <button type="submit" on:click|preventDefault={search}>Search</button>
+  <input type="text" {placeholder} bind:value={searchTerm} />
+  <button
+    type="submit"
+    class="gone"
+    on:click|preventDefault={search(searchTerm)}
+  />
 </form>
 
 <style>
@@ -17,17 +23,13 @@
     margin-top: 3rem;
     margin-bottom: 3rem;
   }
-  
-  input {
+
+  input[type="text"] {
     width: 100%;
     font-size: 1.5rem;
     padding: 0.5rem;
     color: #000;
     background-color: #fff;
-  }
-
-  button {
-    font-size: 1.5rem;
-    padding: 0.5rem;
+    border: 0px;
   }
 </style>

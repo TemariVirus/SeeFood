@@ -6,11 +6,7 @@
 
 <section>
   <div class="info-container">
-    <img
-      class="main-img"
-      src={restaurant.mainImgUrl}
-      alt="In the restaurant"
-    />
+    <img class="main-img" src={restaurant.mainImgUrl} alt="In the restaurant" />
     <p class="text-xl no-margin">{restaurant.name}</p>
     <p class="text-m">{restaurant.categories}</p>
 
@@ -50,7 +46,6 @@
     word-wrap: break-word;
   }
 
-  
   .main-img {
     height: 22.5rem;
     max-height: 22.5rem;

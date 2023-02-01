@@ -1,27 +1,28 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import type { IRestaurant } from "$lib/server/entities";
+  import type { IRestaurant, ICategory } from "$lib/server/entities";
   import fish from "$lib/images/fish.png";
   import SearchBar from "$lib/components/SearchBar.svelte";
   import ItemCard from "$lib/components/ItemCard.svelte";
 
-  export let data: { restaurants: IRestaurant[] };
+  export let data: { category: ICategory; restaurants: IRestaurant[] };
 
   let restaurantSearch = (searchTerm: any) => {
-    goto(`/?search=${searchTerm}`);
+    goto(`/categories/${$page.params.id}/restaurants?search=${searchTerm}`);
     return null;
   };
 </script>
 
 <svelte:head>
-  <title>SeeFood Restaurant Reviews</title>
+  <title>{data.category.name}</title>
   <meta name="Home page" content="All restaurants" />
 </svelte:head>
 
 <section>
   <img id="main-banner" src={fish} alt="Fish in a market" />
   <SearchBar search={restaurantSearch} />
-  <p class="header-text">Browse</p>
+  <p class="header-text">{data.category.name}</p>
   <div class="card-container">
     {#each data.restaurants as r}
       <ItemCard

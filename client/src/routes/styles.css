@@ -83,11 +83,30 @@ button {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+input[type="text"] {
+  border-radius: 9999px;
+}
+
 .header-text {
   margin: 0.5625rem;
   font-size: 3rem;
   font-family: var(--emphasis-fonts);
   text-align: center;
+}
+
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17.25rem, 1fr));
+  grid-gap: 0.5625rem;
+  justify-items: center;
+  align-items: center;
+  align-content: center;
+  margin: 2.4375rem;
+}
+
+.gone {
+  position: absolute;
+  visibility: hidden;
 }
 
 .text-s {

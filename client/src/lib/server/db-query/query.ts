@@ -1,10 +1,6 @@
 import dbConnection from "$lib/server";
 import * as Clause from "./clauses";
-import type {
-  OkPacket,
-  ResultSetHeader,
-  RowDataPacket,
-} from "mysql2";
+import type { OkPacket, ResultSetHeader, RowDataPacket } from "mysql2";
 
 type QueryResult =
   | RowDataPacket[]

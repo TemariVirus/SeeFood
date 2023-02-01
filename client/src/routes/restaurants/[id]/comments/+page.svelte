@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CommentEditer from "$lib/components/commentEditer.svelte";
+  import CommentEditor from "$lib/components/commentEditor.svelte";
   import Comment from "$lib/components/comment.svelte";
   import type { IRestaurant, IComment } from "$lib/server/entities";
   import RestaurantInfo from "$lib/components/restaurantInfo.svelte";
@@ -20,7 +20,7 @@
 </svelte:head>
 
 <RestaurantInfo {restaurant}>
-  <CommentEditer />
+  <CommentEditor />
 
   <div class="comment-container">
     {#if comments.length === 0}
