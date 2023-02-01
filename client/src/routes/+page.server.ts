@@ -1,7 +1,6 @@
-import { restaurantGetUrl } from "$lib/urls";
 import { RestaurantController } from "$lib/server/controllers";
 
-export const prerender = false;
+export const prerender = 'auto';
 
 export const load = async () => {
   return {

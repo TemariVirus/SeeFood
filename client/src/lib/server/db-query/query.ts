@@ -1,5 +1,5 @@
 import dbConnection from "$lib/server";
-import * as Clause from "$lib/server/db-query/clauses";
+import * as Clause from "./clauses";
 import type { OkPacket, QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
 
 type QueryResult =

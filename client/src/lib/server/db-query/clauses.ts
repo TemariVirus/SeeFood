@@ -1,4 +1,5 @@
-import type { Query, JoinType, SqlOperators, UnionType } from "$lib/server/db-query/query";
+import type Query from ".";
+import type { JoinType, SqlOperators, UnionType } from ".";
 
 export abstract class Base {
   protected constructor() {

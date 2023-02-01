@@ -1,10 +1,11 @@
+import { type IApiResult, HttpStatusCodes } from "$lib/server";
 import Query, { JoinType, SqlOperators } from "$lib/server/db-query";
 import { CategoryController, RestaurantCategoryController, CommentController } from ".";
 import type { IRestaurant } from "$lib/server/entities";
 
 declare module "$lib/server/db-query/query" {
   interface Query<T> {
-    toRestaurantArray(): Promise<T>;
+    toRestaurantArray(): Promise<IRestaurant[]>;
   }
 }
 
@@ -62,14 +63,29 @@ export default class RestaurantController {
       );
   }
 
-  public static async getAll() {
-    return await this.selectQueryWithCategories().toRestaurantArray() as Promise<IRestaurant[]>;
+  public static async getAll(): Promise<IApiResult<IRestaurant[]>> {
+    return {
+      status: HttpStatusCodes.OK,
+      data: await this.selectQueryWithCategories().toRestaurantArray()
+    };
   }
 
-  public static async getOne(id: number) {
-    return await this.selectQueryWithCategories()
+  public static async getOne(id: number): Promise<IApiResult<IRestaurant>> {
+    const restaurant = await this.selectQueryWithCategories()
       .where(`${this.tableName}.id`, SqlOperators.EQUAL, id)
       .toRestaurantArray()
-      .then((restaurants) => (restaurants as IRestaurant[])[0]);
+      .then((restaurants) => (restaurants as IRestaurant[])[0])
+      .ensureExists("Restaurant not found");
+      
+    if (typeof restaurant === "string")
+      return {
+        status: HttpStatusCodes.NOT_FOUND,
+        message: restaurant
+      };
+    else
+      return {
+        status: HttpStatusCodes.OK,
+        data: restaurant
+      };
   }
 }
