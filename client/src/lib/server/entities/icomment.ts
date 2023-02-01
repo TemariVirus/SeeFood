@@ -5,6 +5,6 @@ export interface IComment {
   parent_id: number;
   date: Date;
   user_id: number;
-  username: string;
+  user_name: string;
   is_reply: boolean;
 }

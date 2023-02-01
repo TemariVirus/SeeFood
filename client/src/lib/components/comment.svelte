@@ -40,7 +40,7 @@
     <div style="display: flex;">
       <img src={guestPfp} alt="Profile" class="profile-picture" />
       <div class="align-row">
-        <p class="text-m">{data.username}</p>
+        <p class="text-m">{data.user_name}</p>
         <p class="text-s">{new Date(data.date).toDateString()}</p>
         <div class="btn-container">
           <button on:click={editComment}>

@@ -1,6 +1,13 @@
-import { type IApiResult, HttpStatusCodes } from "$lib/server";
-import Query, { JoinType, SqlOperators } from "$lib/server/db-query";
-import { CategoryController, RestaurantCategoryController, CommentController } from ".";
+import Query, {
+  checkIdExists,
+  JoinType,
+  SqlOperators,
+} from "$lib/server/db-query";
+import {
+  CategoryController,
+  RestaurantCategoryController,
+  CommentController,
+} from ".";
 import type { IRestaurant } from "$lib/server/entities";
 
 declare module "$lib/server/db-query/query" {
@@ -13,17 +20,18 @@ export default class RestaurantController {
   public static readonly tableName = "restaurants";
 
   static {
-    Query.prototype.toRestaurantArray = function (this: Query<any>): Promise<IRestaurant[]> {
-      return this.toArray().then((restaurants) =>
-        (restaurants as any[]).map((r: any) => {
-          return {
-            ...r,
-            categories: r.categories ? r.categories.split(",") : [],
-            reviewCount: r.reviewCount ?? 0,
-            restaurant_id: undefined,
-          };
-        })
-      );
+    Query.prototype.toRestaurantArray = async function (
+      this: Query<any>
+    ): Promise<IRestaurant[]> {
+      const restaurants = await this.toArray();
+      return (restaurants as any[]).map((r: any) => {
+        return {
+          ...r,
+          categories: r.categories ? r.categories.split(",") : [],
+          reviewCount: r.reviewCount ?? 0,
+          restaurant_id: undefined,
+        };
+      });
     };
   }
 
@@ -63,29 +71,15 @@ export default class RestaurantController {
       );
   }
 
-  public static async getAll(): Promise<IApiResult<IRestaurant[]>> {
-    return {
-      status: HttpStatusCodes.OK,
-      data: await this.selectQueryWithCategories().toRestaurantArray()
-    };
+  public static async getAll(): Promise<IRestaurant[]> {
+    return await this.selectQueryWithCategories().toRestaurantArray();
   }
 
-  public static async getOne(id: number): Promise<IApiResult<IRestaurant>> {
-    const restaurant = await this.selectQueryWithCategories()
+  public static async getOne(idString: any): Promise<IRestaurant> {
+    const id = await checkIdExists(idString, this.tableName);
+    return await this.selectQueryWithCategories()
       .where(`${this.tableName}.id`, SqlOperators.EQUAL, id)
       .toRestaurantArray()
-      .then((restaurants) => (restaurants as IRestaurant[])[0])
-      .ensureExists("Restaurant not found");
-      
-    if (typeof restaurant === "string")
-      return {
-        status: HttpStatusCodes.NOT_FOUND,
-        message: restaurant
-      };
-    else
-      return {
-        status: HttpStatusCodes.OK,
-        data: restaurant
-      };
+      .then((restaurants) => (restaurants as IRestaurant[])[0]);
   }
 }

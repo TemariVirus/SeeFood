@@ -1,6 +1,10 @@
 import dbConnection from "$lib/server";
 import * as Clause from "./clauses";
-import type { OkPacket, QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
+import type {
+  OkPacket,
+  ResultSetHeader,
+  RowDataPacket,
+} from "mysql2";
 
 type QueryResult =
   | RowDataPacket[]
@@ -120,13 +124,7 @@ export class Query<T> {
     right_col: string
   ): Query<T & U> {
     this.clauses.push(
-      new Clause.Join(
-        type,
-        table.toString()!,
-        left_col,
-        operator,
-        right_col
-      )
+      new Clause.Join(type, table.toString()!, left_col, operator, right_col)
     );
 
     return this as Query<T & U>;
@@ -169,28 +167,32 @@ export class Query<T> {
     return this;
   }
 
-  execute(data?: any[]): Promise<QueryError | QueryResult> {
-    return new Promise((resolve, _) =>
-      dbConnection.query(this.toString()!, data ?? this.data, (err, result) =>
-        resolve(err ?? result)
-      )
+  execute(data?: any[]): Promise<QueryResult> {
+    return new Promise((resolve, reject) =>
+      dbConnection.query(this.toString()!, data ?? this.data, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      })
     );
   }
 
-  toArray(data?: any[]): Promise<QueryError | T[]> {
+  toArray(data?: any[]): Promise<T[]> {
     if (this.type !== QueryType.SELECT)
       throw new Error("Cannot call toArray() on a non-select query");
 
-    return new Promise((resolve, _) =>
-      dbConnection.query(this.toString()!, data ?? this.data, (err, result) =>
-        resolve(err ?? (result as T[]))
-      )
+    return new Promise((resolve, reject) =>
+      dbConnection.query(this.toString()!, data ?? this.data, (err, result) => {
+        if (err) reject(err);
+        else resolve(result as T[]);
+      })
     );
   }
 
   toString() {
     if (this.type === QueryType.SELECT)
-      return `(${this.clauses.join(" ")})${this.alias ? ` AS ${this.alias}` : ""}`;
+      return `(${this.clauses.join(" ")})${
+        this.alias ? ` AS ${this.alias}` : ""
+      }`;
     else if (this.type === QueryType.INSERT) return `${this.clauses[0]}`;
     else if (this.type === QueryType.UPDATE) return `${this.clauses.join(" ")}`;
     else if (this.type === QueryType.DELETE) return `${this.clauses.join(" ")}`;
