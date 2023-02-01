@@ -183,16 +183,16 @@ export class GroupBy extends Base {
 
 export class Union extends Base {
   private unionType: UnionType;
-  private tables: Query<any>[];
+  private tables: (string | Query<any>)[];
 
-  constructor(unionType: UnionType, tables: Query<any>[]) {
+  constructor(unionType: UnionType, tables: (string | Query<any>)[]) {
     super();
     this.unionType = unionType;
-    this.tables = tables;
+    this.tables = [...tables];
   }
 
   public toString(): string {
-    return this.tables.join(` ${this.unionType} `);
+    return this.tables.map(t => t.toString()!).join(` ${this.unionType} `);
   }
 }
 

@@ -4,13 +4,12 @@
   import StarFull from "$lib/images/star-full.svg";
   import StarEmpty from "$lib/images/star-empty.svg";
 
-  import { commentsPostUrl, commentsPutUrl } from "$lib/urls";
   import type { IComment } from "$lib/server/entities";
 
   export let comment: undefined | IComment = undefined;
   export let show = false;
 
-  const isReply = comment?.is_reply ?? false;
+  const isReply = comment?.isReply ?? false;
   let newComment = comment
     ? { ...comment }
     : {
@@ -29,49 +28,52 @@
   }
 
   function done() {
-    if (comment) {
-      fetch(commentsPutUrl(comment.id, comment.is_reply), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Basic " + btoa("Admin:1234"),
-        },
-        body: JSON.stringify({
-          content: newComment.content?.trim(),
-          rating: newComment.rating,
-        }),
-      }).then(async (res) => {
-        if (res.ok) {
-          alert("Comment edited successfully");
-          // TODO: Refresh comments
-        } else {
-          const message = await res.json();
-          alert(message ?? "Error editing comment");
-        }
-      });
-    } else {
-      fetch(commentsPostUrl(newComment.is_reply), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Basic " + btoa("Admin:1234"),
-        },
-        body: JSON.stringify({
-          content: newComment.content?.trim(),
-          rating: newComment.rating,
-          parent_id: newComment.parent_id,
-        }),
-      }).then(async (res) => {
-        if (res.ok) {
-          alert("Comment posted successfully");
-          // TODO: Refresh comments
-        } else {
-          const message = await res.json();
-          alert(message ?? "Error posting comment");
-        }
-      });
-    }
+
   }
+
+// function done() {
+//     if (comment) {
+//       fetch(commentsPutUrl(comment.id, comment.isReply), {
+//         method: "PUT",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: "Basic " + btoa("Admin:1234"),
+//         },
+//         body: JSON.stringify({
+//           content: newComment.content?.trim(),
+//           rating: newComment.rating,
+//         }),
+//       }).then(async (res) => {
+//         if (res.ok) {
+//           alert("Comment edited successfully");
+//           // TODO: Refresh comments
+//         } else {
+//           const message = await res.json();
+//           alert(message ?? "Error editing comment");
+//         }isReply);
+//     } else {
+//       fetch(commentsPostUrl(newComment.is_reply), {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: "Basic " + btoa("Admin:1234"),
+//         },
+//         body: JSON.stringify({
+//           content: newComment.content?.trim(),
+//           rating: newComment.rating,
+//           parent_id: newComment.parent_id,
+//         }),
+//       }).then(async (res) => {
+//         if (res.ok) {
+//           alert("Comment posted successfully");
+//           // TODO: Refresh comments
+//         } else {
+//           const message = await res.json();
+//           alert(message ?? "Error posting comment");
+//         }
+//       });
+//     }
+//   }
 </script>
 
 <div class="container">

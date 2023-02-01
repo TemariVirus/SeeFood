@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { IRestaurant, IComment } from "$lib/server/entities";
+  import type { IRestaurant } from "$lib/server/entities";
 
   export let restaurant: IRestaurant;
 </script>
@@ -8,7 +8,7 @@
   <div class="info-container">
     <img
       class="main-img"
-      src={restaurant.main_img_url}
+      src={restaurant.mainImgUrl}
       alt="In the restaurant"
     />
     <p class="text-xl no-margin">{restaurant.name}</p>
@@ -16,8 +16,8 @@
 
     <div id="rating" />
     <div>
-      <p>Opening Hours: {restaurant.opening_hours}</p>
-      <p>Telephone No.: {restaurant.telephone_no}</p>
+      <p>Opening Hours: {restaurant.openingHours}</p>
+      <p>Telephone No.: {restaurant.telephoneNo}</p>
       <p>
         Website: <a href="http://{restaurant.website}">{restaurant.website}</a>
       </p>

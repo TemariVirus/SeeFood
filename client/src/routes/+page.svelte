@@ -21,7 +21,7 @@
       <ItemCard
         primaryText={r.name}
         secondaryText={r.categories.join(", ")}
-        imageURL={r.logo_url}
+        imageURL={r.logoUrl}
         link={`/restaurants/${r.id}`}
       />
     {/each}

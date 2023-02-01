@@ -17,7 +17,7 @@
   }
 
   function deleteComment() {
-    fetch(commentsDeleteUrl(data.id, data.is_reply), {
+    fetch(commentsDeleteUrl(data.id, data.isReply), {
       method: "DELETE",
       headers: {
         Authorization: "Basic " + btoa("Admin:1234"),
@@ -36,11 +36,11 @@
 </script>
 
 {#if data.content}
-  <div class="comment {data.is_reply ? 'reply' : ''}">
+  <div class="comment {data.isReply ? 'reply' : ''}">
     <div style="display: flex;">
       <img src={guestPfp} alt="Profile" class="profile-picture" />
       <div class="align-row">
-        <p class="text-m">{data.user_name}</p>
+        <p class="text-m">{data.userName}</p>
         <p class="text-s">{new Date(data.date).toDateString()}</p>
         <div class="btn-container">
           <button on:click={editComment}>

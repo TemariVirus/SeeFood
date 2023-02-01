@@ -2,9 +2,9 @@ export interface IComment {
   id: number;
   content?: string;
   rating?: number;
-  parent_id: number;
+  parentId: number;
   date: Date;
-  user_id: number;
-  user_name: string;
-  is_reply: boolean;
+  userId: number;
+  userName: string;
+  isReply: boolean;
 }

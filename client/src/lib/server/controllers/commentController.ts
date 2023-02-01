@@ -15,7 +15,7 @@ declare module "$lib/server/db-query/query" {
 
 declare global {
   interface Array<T> {
-    sortCommentsByDate(
+    groupComments(
       this: IComment[]
     ): { review: IComment; replies: IComment[] }[];
   }
@@ -27,11 +27,11 @@ export default class CommentController {
 
   static {
     Query.prototype.toCommentArray = async function (this: Query<any>) {
-      const comments = await Query.select("r.*", "username")
+      const comments = await Query.select("r.*", "user_name")
         .from(this.as("r"))
         .join(
           JoinType.INNER_JOIN,
-          Query.select("id", "`name` AS username")
+          Query.select("id", "`name` AS user_name")
             .from(UserController.tableName)
             .as("u"),
           "r.user_id",
@@ -39,39 +39,71 @@ export default class CommentController {
           "u.id"
         )
         .toArray();
-
-      return (comments as any[]).map((c) => {
-        return {
-          ...c,
-          content: (c.content ??= undefined),
-          rating: (c.rating ??= undefined),
-          date: c.date.getTime(),
-          is_reply: c.is_reply === 1,
-        };
-      });
+      return (comments as any[]).map(CommentController.entityToComment);
     };
 
-    Array.prototype.sortCommentsByDate = function () {
-      // Sort by date ascending
-      this.sort((a, b) => a.date.valueOf() - b.date.valueOf());
+    Array.prototype.groupComments = function () {
+      // Sort by latest first
+      this.sort((a, b) => b.date.valueOf() - a.date.valueOf());
 
-      const reviews = this.filter((c) => !c.is_reply);
-      const replies = this.filter((c) => c.is_reply).reverse();
+      const reviews = this.filter((c) => !c.isReply && c.content !== null);
+      // Sort replies by parent id to easily split them
+      // (Satble sort is guarenteed on ECMAScript 2019 and above)
+      const replies = this.filter((c) => c.isReply)
+        .reverse() // Reverse so that replies are by earliest first
+        .sort((a, b) => a.parentId - b.parentId);
 
+
+      if (replies.length === 0)
+        return reviews.map((review) => ({ review, replies: [] }));
+
+      // Get array of indices where parent id changes
+      const splits = replies.reduce((acc, reply, i) => {
+        // Skip first element
+        if (i === 0) return acc;
+
+        if (replies[i - 1].parentId !== reply.parentId) acc.push(i);
+        return acc;
+      }, [0]);
+      splits.push(replies.length);
       // Group replies with their parent review
-      let comments = reviews;
-      replies.forEach((reply) => {
-        const index = comments.findIndex((c) => c.id === reply.parent_id);
-        if (index !== -1) comments.splice(index + 1, 0, reply);
-      });
+      console.log(this.filter((c) => !c.isReply)
+        .map((review, i) => {
+          return {
+            review,
+            replies: replies.slice(splits[i], splits[i + 1]),
+          };
+        }));
 
-      return comments;
+      let j = 0;
+      return reviews
+        .map((review) => { 
+          return {
+            review,
+            replies: replies[splits[Math.min(j, splits.length - 2)]].parentId === review.id ?
+              replies.slice(splits[j], splits[++j]) :
+              [],
+          };
+        }, []);
     };
+  }
+
+  private static entityToComment(entity: any): IComment {
+    return {
+      id: entity.id,
+      content: entity.content ?? undefined,
+      rating: entity.rating ?? undefined,
+      parentId: entity.parent_id,
+      date: entity.date.getTime(),
+      userId: entity.user_id,
+      userName: entity.user_name,
+      isReply: entity.is_reply === 1,
+    }
   }
 
   // Get all comments for a restaurant with the given id
   public static async getByRestaurantId(idString: any): Promise<IComment[]> {
-    const id = checkIdExists(idString, RestaurantController.tableName);
+    const id = await checkIdExists(idString, RestaurantController.tableName);
 
     const reviewQuery = Query.select(
       "id",

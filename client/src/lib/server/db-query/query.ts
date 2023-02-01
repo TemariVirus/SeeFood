@@ -135,7 +135,7 @@ export class Query<T> {
     return this;
   }
 
-  static union(type: UnionType, ...queries: Query<any>[]) {
+  static union(type: UnionType, ...queries: (string | Query<any>)[]) {
     const query = new Query<any>(QueryType.SELECT);
     query.clauses.push(new Clause.Union(type, queries));
 

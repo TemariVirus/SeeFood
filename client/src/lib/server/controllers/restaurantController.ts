@@ -10,32 +10,10 @@ import {
 } from ".";
 import type { IRestaurant } from "$lib/server/entities";
 
-declare module "$lib/server/db-query/query" {
-  interface Query<T> {
-    toRestaurantArray(): Promise<IRestaurant[]>;
-  }
-}
-
 export default class RestaurantController {
   public static readonly tableName = "restaurants";
 
-  static {
-    Query.prototype.toRestaurantArray = async function (
-      this: Query<any>
-    ): Promise<IRestaurant[]> {
-      const restaurants = await this.toArray();
-      return (restaurants as any[]).map((r: any) => {
-        return {
-          ...r,
-          categories: r.categories ? r.categories.split(",") : [],
-          reviewCount: r.reviewCount ?? 0,
-          restaurant_id: undefined,
-        };
-      });
-    };
-  }
-
-  private static selectQueryWithCategories() {
+  private static selectQueryTemplate() {
     return Query.select()
       .from(this.tableName)
       .join(
@@ -71,15 +49,33 @@ export default class RestaurantController {
       );
   }
 
+  private static entityToRestaurant(entity: any): IRestaurant {
+    return {
+      id: entity.id,
+      description: entity.description,
+      logoUrl: entity.logo_url,
+      name: entity.name,
+      mainImgUrl: entity.main_img_url,
+      openingHours: entity.opening_hours ?? undefined,
+      telephoneNo: entity.telephone_no ?? undefined,
+      website: entity.website ?? undefined,
+      categories: (entity.categories ?? "").split(",").filter((c: string) => c),
+      rating: entity.rating,
+      reviewCount: entity.reviewCount ?? 0,
+    };
+  }
+
   public static async getAll(): Promise<IRestaurant[]> {
-    return await this.selectQueryWithCategories().toRestaurantArray();
+    return await this.selectQueryTemplate()
+      .toArray()
+      .then(restaurants => restaurants.map(this.entityToRestaurant));
   }
 
   public static async getOne(idString: any): Promise<IRestaurant> {
     const id = await checkIdExists(idString, this.tableName);
-    return await this.selectQueryWithCategories()
+    return await this.selectQueryTemplate()
       .where(`${this.tableName}.id`, SqlOperators.EQUAL, id)
-      .toRestaurantArray()
-      .then((restaurants) => (restaurants as IRestaurant[])[0]);
+      .toArray()
+      .then(restaurants => this.entityToRestaurant(restaurants[0]));
   }
 }
