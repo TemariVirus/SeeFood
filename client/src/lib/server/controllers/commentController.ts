@@ -1,11 +1,10 @@
+import { idExists, RestaurantController, UserController } from ".";
 import Query, {
-  checkIdExists,
   SqlOperators,
   JoinType,
   UnionType,
 } from "$lib/server/db-query";
 import type { IComment } from "$lib/server/entities";
-import { RestaurantController, UserController } from "$lib/server/controllers";
 
 declare module "$lib/server/db-query/query" {
   interface Query<T> {
@@ -99,7 +98,7 @@ export default class CommentController {
 
   // Get all comments for a restaurant with the given id
   public static async getByRestaurantId(idString: any): Promise<IComment[]> {
-    const id = await checkIdExists(idString, RestaurantController.tableName);
+    const id = await idExists(idString, RestaurantController.tableName);
 
     const reviewQuery = Query.select(
       "id",
@@ -139,7 +138,7 @@ export default class CommentController {
   }
 
   public static async getByUserId(idString: any): Promise<IComment[]> {
-    const id = await checkIdExists(idString, UserController.tableName);
+    const id = await idExists(idString, UserController.tableName);
 
     const reviewQuery = Query.select(
       "id",

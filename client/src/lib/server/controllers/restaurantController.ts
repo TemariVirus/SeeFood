@@ -1,13 +1,13 @@
-import Query, {
-  checkIdExists,
-  JoinType,
-  SqlOperators,
-} from "$lib/server/db-query";
 import {
+  idExists,
   CategoryController,
   RestaurantCategoryController,
   CommentController,
 } from ".";
+import Query, {
+  JoinType,
+  SqlOperators,
+} from "$lib/server/db-query";
 import type { IRestaurant } from "$lib/server/entities";
 
 export default class RestaurantController {
@@ -77,7 +77,7 @@ export default class RestaurantController {
   }
 
   public static async getOne(idString: any): Promise<IRestaurant> {
-    const id = await checkIdExists(idString, this.tableName);
+    const id = await idExists(idString, this.tableName);
 
     return await this.selectQueryTemplate()
       .where(`${this.tableName}.id`, SqlOperators.EQUAL, id)
@@ -89,7 +89,7 @@ export default class RestaurantController {
     idString: any,
     likeName: string = ""
   ): Promise<IRestaurant[]> {
-    const id = await checkIdExists(idString, CategoryController.tableName);
+    const id = await idExists(idString, CategoryController.tableName);
     const query = this.selectQueryTemplate()
       .where(
         "rc.restaurant_id",
