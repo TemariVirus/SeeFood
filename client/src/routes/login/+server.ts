@@ -1,16 +1,10 @@
-import { type RequestHandler, json, error } from '@sveltejs/kit';
-import { UserController } from '$lib/server/controllers';
-import { generateLoginToken } from '$lib/server';
+import { type RequestHandler, json } from "@sveltejs/kit";
+import { UserController } from "$lib/server/controllers";
+import HttpStatusCodes from "$lib/httpStatusCodes";
 
 export const POST = (async ({ request, params, url }: any) => {
-    const body = await request.json();
-    const user = await UserController.checkAuth(body);
-    const token = generateLoginToken(user);
+  const body = await request.json();
+  const token = await UserController.getLoginToken(body);
 
-    return json({
-        status: 200,
-        body: {
-            token
-        },
-    });
+  return json(token, { status: HttpStatusCodes.OK });
 }) satisfies RequestHandler;

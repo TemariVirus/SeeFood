@@ -1,23 +1,26 @@
 <script lang="ts">
+  import { store } from "$lib/authStore";
   import guestPfp from "$lib/images/guest-pfp.svg";
 </script>
 
 <header>
   <nav>
     <a href="/">
-      <button id="title-btn" class="header-btn">SeeFood</button>
+      <button id="title-btn" class="header-btn" tabindex="-1">SeeFood</button>
     </a>
     <div id="header-btns">
       <a href="/about">
-        <button class="header-btn">About</button>
+        <button class="header-btn" tabindex="-1">About</button>
       </a>
       <a href="/categories">
-        <button class="header-btn">Categories</button>
+        <button class="header-btn" tabindex="-1">Categories</button>
       </a>
-      <button class="header-btn user-profile-btn">
-        <div id="username">Guest</div>
-        <img src={guestPfp} alt="Profile" />
-      </button>
+      <a href="/profile">
+        <button class="header-btn user-profile-btn" tabindex="-1">
+          <div id="username">{$store.user?.name ?? "Guest"}</div>
+          <img src={guestPfp} alt="Your profile" />
+        </button>
+      </a>
     </div>
   </nav>
 </header>

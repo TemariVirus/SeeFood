@@ -9,7 +9,7 @@
 
   let restaurantSearch = (searchTerm: any) => {
     goto(`/?search=${searchTerm}`);
-    return null;
+    return undefined;
   };
 </script>
 

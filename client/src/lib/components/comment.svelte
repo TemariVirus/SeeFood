@@ -5,7 +5,6 @@
   import editIcon from "$lib/images/edit.svg";
   import deleteIcon from "$lib/images/delete.svg";
 
-  import { commentsDeleteUrl } from "$lib/urls";
   import CommentEditor from "$lib/components/commentEditor.svelte";
   import type { IComment } from "$lib/server/entities";
 
@@ -17,28 +16,14 @@
   }
 
   function deleteComment() {
-    fetch(commentsDeleteUrl(data.id, data.isReply), {
-      method: "DELETE",
-      headers: {
-        Authorization: "Basic " + btoa("Admin:1234"),
-      },
-    }).then(async (res) => {
-      console.log(res);
-      if (res.ok) {
-        alert("Comment deleted successfully");
-        // TODO: Refresh comments
-      } else {
-        const message = await res.json();
-        alert(message ?? "Error posting comment");
-      }
-    });
+    
   }
 </script>
 
 {#if data.content}
   <div class="comment {data.isReply ? 'reply' : ''}">
     <div style="display: flex;">
-      <img src={guestPfp} alt="Profile" class="profile-picture" />
+      <img src={guestPfp} alt="{data.userName}'s profile" class="profile-picture" />
       <div class="align-row">
         <p class="text-m">{data.userName}</p>
         <p class="text-s">{new Date(data.date).toDateString()}</p>

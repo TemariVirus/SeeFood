@@ -28,7 +28,7 @@
     width: 100%;
     font-size: 1.5rem;
     padding: 0.5rem;
-    color: #000;
+    color: black;
     background-color: #fff;
     border: 0px;
   }

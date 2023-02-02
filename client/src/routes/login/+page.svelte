@@ -2,11 +2,8 @@
   import { goto } from "$app/navigation";
   import LoginForm from "$lib/components/loginForm.svelte";
 
-  function signUp(name: string, password: string) {
-    console.log("username: ", name);
-    console.log("password: ", password);
-
-    fetch("/users", {
+  function login(name: string, password: string) {
+    fetch("/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -17,6 +14,8 @@
       }),
     }).then(async (response) => {
       if (response.ok) {
+        const token = await response.json();
+        console.log(token);
         goto("/");
       } else {
         alert(
@@ -36,10 +35,10 @@
 </script>
 
 <section>
-    <div class="header-text">Sign Up</div>
+  <div class="header-text">Log In</div>
 
-  <LoginForm btnText="Sign Up" handleLogin={signUp}>
-    <p>Already have an account? <a href="/login">Log In</a></p>
+  <LoginForm btnText="Log In" handleLogin={login}>
+    <p>Don't have an account? <a href="/signup">Sign Up</a></p>
   </LoginForm>
 </section>
 

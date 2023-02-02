@@ -10,7 +10,7 @@
 
   let restaurantSearch = (searchTerm: any) => {
     goto(`/categories/${$page.params.id}/restaurants?search=${searchTerm}`);
-    return null;
+    return undefined;
   };
 </script>
 

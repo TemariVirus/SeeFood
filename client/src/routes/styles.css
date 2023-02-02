@@ -83,6 +83,14 @@ button {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+input::placeholder {
+  color: #707070;
+}
+input::placeholder-shown {
+  color: #333;
+}
+
+.rounded-full,
 input[type="text"] {
   border-radius: 9999px;
 }
