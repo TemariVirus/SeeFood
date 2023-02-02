@@ -19,6 +19,7 @@
       <ItemCard
         primaryText={c.name}
         imageURL={c.imgUrl}
+        altText="Food"
         link={`/categories/${c.id}/restaurants`}
       />
     {/each}

@@ -2,12 +2,13 @@
   export let primaryText: string;
   export let secondaryText: string = "";
   export let imageURL: string;
+  export let altText: string = "Item";
   export let link: string = "#";
 </script>
 
 <a href={link} class="item-card">
   <div class="image-backdrop">
-    <img src={imageURL} alt="Item" class="card-image" />
+    <img src={imageURL} alt="{altText}" class="card-image" />
   </div>
   <div class="secondary-text">{secondaryText}</div>
   <div class="primary-text">{primaryText}</div>

@@ -28,6 +28,7 @@
         primaryText={r.name}
         secondaryText={r.categories.join(", ")}
         imageURL={r.logoUrl}
+        altText="Logo"
         link={`/restaurants/${r.id}`}
       />
     {/each}
