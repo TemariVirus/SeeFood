@@ -38,7 +38,7 @@ CREATE TABLE `comments` (
   CONSTRAINT `comment_restaurant_FK` FOREIGN KEY (`restaurant_id`) REFERENCES `restaurants` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `comment_review_FK` FOREIGN KEY (`review_id`) REFERENCES `comments` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `comment_user_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -47,7 +47,7 @@ CREATE TABLE `comments` (
 
 LOCK TABLES `comments` WRITE;
 /*!40000 ALTER TABLE `comments` DISABLE KEYS */;
-INSERT INTO `comments` VALUES (1,'Very good restaurant',5,'2022-11-10',2,1,NULL),(2,'Best. Hot. Pot. Ever.',5,'2022-12-24',3,1,NULL),(3,'Pretty Mid.',3,'2022-12-18',4,1,NULL),(4,'Excellent seafood.',5,'2022-11-10',2,2,NULL),(8,'Decent sushi for the price.',4,'2022-11-11',2,4,NULL),(9,'pepeloni. you know the pepeloni?\nahh the pepeloni, pepeloni. you know the pepeloni? the nooo one. i always, i always order the, the domino. domino pepeloni and without pepeloni. i always order the pepeloni and without pepeloni. pepeloni! i like pepeloni, yeah. i always, i always order the, the cheese- cheese pan. ahh how can i explain? i can explain by my drawing! i always order like the cheese pan that it has cheese on here, this part, the ear. ear of pizza. and then, i order- wh- when i order pepeloni, the ear- it always have a pepeloni on h- on a top, but i pick up these... away! cause i don\'t eat it. and then i eat the cheese pan pizza. okay? you understand? understandable! pepeloni! yes.',5,'1818-08-18',18,3,NULL),(11,'The hainanese chicken rice they serve here is simply unbeatable! A michelin star top-notch demostration of Singapoeran cuisine. Simply devine. Top-notch. Unbeatable. Chicken.',4,'2022-12-22',8,6,NULL),(12,'ikr frfr',NULL,'2022-12-29',6,1,2),(13,'what? And how did you make a review before the internet was even born?',NULL,'2022-12-14',5,3,9),(14,'@Mary maybe time travellers are real ?',NULL,'2022-12-18',6,3,9),(15,'mood',NULL,'2022-12-19',7,3,9),(16,'Not mid.',NULL,'2022-12-21',3,1,3),(17,'Get out bot',NULL,'2022-12-27',7,6,11);
+INSERT INTO `comments` VALUES (1,'Very good restaurant',5,'2022-11-10',2,1,NULL),(2,'Best. Hot. Pot. Ever.',5,'2022-12-24',3,1,NULL),(3,'Pretty Mid.',3,'2022-12-18',4,1,NULL),(4,'Excellent seafood.',5,'2022-11-10',2,2,NULL),(8,'Decent sushi for the price.',4,'2022-11-11',2,4,NULL),(9,'pepeloni. you know the pepeloni?\n\nahh the pepeloni, pepeloni. you know the pepeloni? the nooo one. i always, i always order the, the domino. domino pepeloni and without pepeloni. i always order the pepeloni and without pepeloni. pepeloni! i like pepeloni, yeah. i always, i always order the, the cheese- cheese pan. ahh how can i explain? i can explain by my drawing! i always order like the cheese pan that it has cheese on here, this part, the ear. ear of pizza. and then, i order- wh- when i order pepeloni, the ear- it always have a pepeloni on h- on a top, but i pick up these... away! cause i don\'t eat it. and then i eat the cheese pan pizza. okay? you understand? understandable! pepeloni! yes.',5,'1818-08-18',18,3,NULL),(11,'The hainanese chicken rice they serve here is simply unbeatable! A michelin star top-notch demostration of Singapoeran cuisine. Simply devine. Top-notch. Unbeatable. Chicken.',4,'2022-12-22',8,6,NULL),(12,'ikr frfr',NULL,'2022-12-29',6,1,2),(13,'what? And how did you make a review before the internet was even born?',NULL,'2022-12-14',5,3,9),(14,'@Mary maybe time travellers are real ?',NULL,'2022-12-18',6,3,9),(15,'mood',NULL,'2022-12-19',7,3,9),(16,'Not mid.',NULL,'2022-12-21',3,1,3),(17,'Get out bot',NULL,'2022-12-27',7,6,11);
 /*!40000 ALTER TABLE `comments` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -60,4 +60,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-02-04  4:57:01
+-- Dump completed on 2023-02-04 19:23:09

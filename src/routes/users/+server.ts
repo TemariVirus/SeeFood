@@ -1,4 +1,4 @@
-import { type RequestHandler, json, error,  } from "@sveltejs/kit";
+import { type RequestHandler, json, error } from "@sveltejs/kit";
 import { getTokenPayload } from "$lib/server/auth";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 import { UserController } from "$lib/server/controllers";
@@ -9,7 +9,7 @@ export const POST = (async ({ request, params, url }: any) => {
 
   if (!success)
     throw error(HttpStatusCodes.INTERNAL_SERVER_ERROR, "Failed to add user.");
-    
+
   return json("Success", { status: HttpStatusCodes.CREATED });
 }) satisfies RequestHandler;
 

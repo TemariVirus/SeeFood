@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.30, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.32, for Win64 (x86_64)
 --
 -- Host: localhost    Database: seefooddb
 -- ------------------------------------------------------
--- Server version	8.0.30
+-- Server version	8.0.32
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS `categories`;
 CREATE TABLE `categories` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
+  `img_url` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
@@ -37,7 +38,7 @@ CREATE TABLE `categories` (
 
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
-INSERT INTO `categories` VALUES (5,'Chinese'),(4,'Fine Dining'),(8,'Hot Pot'),(9,'Ice Cream'),(6,'Italian'),(3,'Japanse'),(1,'Seafood'),(7,'Singaporean'),(10,'Sushi'),(2,'Western');
+INSERT INTO `categories` VALUES (1,'Seafood','https://i.imgur.com/uqXLhIQ.jpg'),(2,'Western','https://i.imgur.com/t3fhocW.jpg'),(3,'Japanse','https://i.imgur.com/Hhlb4AU.jpg'),(4,'Fine Dining','https://i.imgur.com/3GAGeOb.jpeg'),(5,'Chinese','https://i.imgur.com/DjfdDCr.jpeg'),(6,'Italian','https://i.imgur.com/jU7Qufq.jpg'),(7,'Singaporean','https://i.imgur.com/mtDtKcM.jpg'),(8,'Hot Pot','https://i.imgur.com/UUFUnsn.jpg'),(9,'Ice Cream','https://i.imgur.com/pAiXMIw.jpeg'),(10,'Sushi','https://i.imgur.com/Hhlb4AU.jpg');
 /*!40000 ALTER TABLE `categories` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -50,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-01-15 23:39:21
+-- Dump completed on 2023-02-04 19:23:09

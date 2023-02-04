@@ -76,17 +76,19 @@ export default class UserController {
     const data = handleZodParse(updateUserRequest, user);
 
     // Ensure name is unique
-    const nameExists = await Query.exists(
-      Query.select()
-        .from(this.tableName)
-        .where("name", SqlOperators.EQUAL)
-        .and("id", SqlOperators.NOT_EQUAL)
-    )
-      .execute([data.name, id])
-      .then((exists) => (exists as any[])[0])
-      .then((exists) => Object.values(exists)[0] === 1);
-    if (data.name && nameExists)
-      throw error(HttpStatusCodes.CONFLICT, "Name is already taken.");
+    if (data.name !== undefined) {
+      const nameExists = await Query.exists(
+        Query.select()
+          .from(this.tableName)
+          .where("name", SqlOperators.EQUAL)
+          .and("id", SqlOperators.NOT_EQUAL)
+      )
+        .execute([data.name, id])
+        .then((exists) => (exists as any[])[0])
+        .then((exists) => Object.values(exists)[0] === 1);
+      if (data.name && nameExists)
+        throw error(HttpStatusCodes.CONFLICT, "Name is already taken.");
+    }
 
     // Update user
     const result = await Query.update(this.tableName)

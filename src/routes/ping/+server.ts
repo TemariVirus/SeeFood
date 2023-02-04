@@ -1,7 +1,7 @@
-import { json } from "@sveltejs/kit";
+import { type RequestHandler, json } from "@sveltejs/kit";
 
 export const prerender = true;
 
-export async function GET() {
+export const GET = (() => {
   return json("pong");
-}
+}) satisfies RequestHandler;
