@@ -6,7 +6,6 @@
 
   import StarFull from "$lib/images/star-full.svg";
   import StarEmpty from "$lib/images/star-empty.svg";
-  import { invalidate } from "$app/navigation";
 
   export let comment: null | IComment = null;
   export let show = false;
@@ -29,47 +28,25 @@
   }
 
   function done() {
-    if (comment) {
-        fetch(`/comments/${comment.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + $authStore.token,
-        },
-        body: JSON.stringify({
-          content: newComment.content?.trim(),
-          rating: newComment.rating,
-        }),
-      }).then(async (res) => {
-        if (res.ok) {
-          alert("Comment edited successfully");
-          // TODO: Refresh comments
-        } else {
-          const message = await res.json();
-          alert(message ?? "Error editing comment");
-        }
-      });
-    } else {
-      fetch(`/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + $authStore.token,
-        },
-        body: JSON.stringify({
-          content: newComment.content?.trim(),
-          rating: newComment.rating,
-          parentId: newComment.parentId,
-          isReply: newComment.isReply,
-        }),
-      }).then((res) => {
-        if (res.ok) {
-          location.reload();
-        } else {
-          clientHandleApiError(res);
-        }
-      });
-    }
+    fetch(`/comments/${comment ? comment.id : ""}`, {
+      method: comment ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + $authStore.token,
+      },
+      body: JSON.stringify({
+        content: newComment.content?.trim(),
+        rating: newComment.rating,
+        parentId: newComment.parentId,
+        isReply: newComment.isReply,
+      }),
+    }).then((res) => {
+      if (res.ok) {
+        location.reload();
+      } else {
+        clientHandleApiError(res);
+      }
+    });
   }
 </script>
 

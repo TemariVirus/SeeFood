@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import type { IRestaurant } from "$lib/entities";
-  import fish from "$lib/images/fish.png";
+  import fish from "$lib/images/fish.webp";
   import SearchBar from "$lib/components/SearchBar.svelte";
   import ItemCard from "$lib/components/ItemCard.svelte";
 

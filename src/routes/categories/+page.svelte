@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ICategory } from "$lib/entities";
-  import fish from "$lib/images/fish.png";
+  import fish from "$lib/images/fish.webp";
   import ItemCard from "$lib/components/ItemCard.svelte";
 
   export let data: { categories: ICategory[] };

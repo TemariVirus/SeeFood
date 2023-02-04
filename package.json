@@ -1,26 +1,30 @@
 {
   "name": "seefood",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.1",
   "scripts": {
-    "start": "cd ./server/ && npm install && npx tsc -P . && cd ../client/ && npm install && cd ../ && npm install && npm run dev",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd ./server/ && npm start",
-    "client": "cd ./client/ && npm run dev -- --open",
-    "compile": "cd ./server/ && npm run compile"
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Zemogus/SeeFood.git"
+  "devDependencies": {
+    "@fontsource/fira-mono": "^4.5.10",
+    "@neoconfetti/svelte": "^1.0.0",
+    "@sveltejs/adapter-node": "^1.0.0-next.106",
+    "@sveltejs/kit": "^1.0.0",
+    "@types/bcrypt": "^5.0.0",
+    "@types/cookie": "^0.5.1",
+    "@types/jsonwebtoken": "^9.0.1",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.0",
+    "mysql2": "^3.1.0",
+    "svelte": "^3.54.0",
+    "svelte-check": "^3.0.1",
+    "tslib": "^2.4.1",
+    "typescript": "^4.9.3",
+    "vite": "^4.0.0",
+    "zod": "^3.20.2"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Zemogus/SeeFood/issues"
-  },
-  "homepage": "https://github.com/Zemogus/SeeFood#readme",
-  "dependencies": {
-    "concurrently": "^7.6.0",
-    "node": "^18.13.0"
-  }
+  "type": "module"
 }
