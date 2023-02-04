@@ -1,13 +1,13 @@
 import { redirect } from "@sveltejs/kit";
 import { get } from "svelte/store";
-import { store } from "$lib/authStore";
+import { authStore } from "$lib/stores/auth";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 
 export const prerender = "auto";
 
 export const load = async () => {
-  const data = get(store);
-  if (!data.user) throw redirect(HttpStatusCodes.FOUND, "/login");
+  const { user, token } = get(authStore);
+  if (!user) throw redirect(HttpStatusCodes.FOUND, "/login");
 
-  return data.user;
+  return user;
 };

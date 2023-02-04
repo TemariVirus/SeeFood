@@ -1,32 +1,36 @@
 <script lang="ts">
+  import { authStore } from "$lib/stores/auth";
+  import type { IComment } from "$lib/server/entities";
+
   import guestPfp from "$lib/images/guest-pfp.svg";
   import starEmpty from "$lib/images/star-empty.svg";
   import starFull from "$lib/images/star-full.svg";
   import editIcon from "$lib/images/edit.svg";
   import deleteIcon from "$lib/images/delete.svg";
-
   import CommentEditor from "$lib/components/commentEditor.svelte";
-  import type { IComment } from "$lib/server/entities";
 
   export let data: IComment;
   let showEditor = false;
-
+  
   function editComment() {
     showEditor = true;
   }
 
-  function deleteComment() {
-    
-  }
+  function deleteComment() {}
 </script>
 
 {#if data.content}
   <div class="comment {data.isReply ? 'reply' : ''}">
     <div style="display: flex;">
-      <img src={guestPfp} alt="{data.userName}'s profile" class="profile-picture" />
+      <img
+        src={guestPfp}
+        alt="{data.userName}'s profile"
+        class="profile-picture"
+      />
       <div class="align-row">
         <p class="text-m">{data.userName}</p>
         <p class="text-s">{new Date(data.date).toDateString()}</p>
+        {#if $authStore.user?.name === data.userName}
         <div class="btn-container">
           <button on:click={editComment}>
             <img src={editIcon} alt="Edit" class="btn-icon" />
@@ -35,6 +39,7 @@
             <img src={deleteIcon} alt="Delete" class="btn-icon" />
           </button>
         </div>
+        {/if}
       </div>
     </div>
 

@@ -3,7 +3,7 @@ import { Query, JoinType, SqlOperators } from "../db-query/query";
 import { z } from "zod";
 
 declare module "../db-query/query" {
-  interface Query<T> {
+  interface Query {
     toCommentArray(): Promise<T[]>;
   }
 }
@@ -81,7 +81,7 @@ export class Comment {
   is_reply: boolean;
 
   static {
-    Query.prototype.toCommentArray = function (this: Query<any>) {
+    Query.prototype.toCommentArray = function (this: Query) {
       return Query.select("r.*", "username")
         .from(this.as("r"))
         .join(

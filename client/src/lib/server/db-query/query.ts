@@ -45,9 +45,9 @@ enum QueryType {
   DELETE,
 }
 
-export class Query<T> {
+export class Query {
   private type: QueryType;
-  private clauses = [] as (Clause.Base | Query<any>)[];
+  private clauses = [] as (Clause.Base | Query)[];
   private data: undefined | any[];
   private alias: undefined | string;
 
@@ -55,44 +55,44 @@ export class Query<T> {
     this.type = type;
   }
 
-  public static select<T>(...fields: string[]) {
-    const query = new Query<T>(QueryType.SELECT);
+  public static select(...fields: string[]) {
+    const query = new Query(QueryType.SELECT);
     if (fields.length === 0) fields.push("*");
     query.clauses.push(new Clause.Select(fields));
     return query;
   }
 
-  static insert<T>(
+  static insert(
     tableName: string,
     data: Record<string, any>,
     fields: string[] = Object.keys(data)
   ) {
-    const query = new Query<T>(QueryType.INSERT);
+    const query = new Query(QueryType.INSERT);
     query.clauses.push(new Clause.Insert(tableName, fields));
     query.data = fields.map((field) => data[field]);
     return query;
   }
 
-  static update<T>(tableName: string) {
-    const query = new Query<T>(QueryType.UPDATE);
+  static update(tableName: string) {
+    const query = new Query(QueryType.UPDATE);
     query.clauses.push(new Clause.Update(tableName));
     return query;
   }
 
-  static delete<T>() {
-    const query = new Query<T>(QueryType.DELETE);
+  static delete() {
+    const query = new Query(QueryType.DELETE);
     query.clauses.push(new Clause.Delete());
     return query;
   }
 
-  static exists<T>(innerQuery: Query<T>) {
-    const query = new Query<T>(QueryType.SELECT);
+  static exists(innerQuery: Query) {
+    const query = new Query(QueryType.SELECT);
     query.clauses.push(new Clause.Select(["EXISTS"]));
     query.clauses.push(innerQuery);
     return query;
   }
 
-  from(tableName: string | Query<T>) {
+  from(tableName: string | Query) {
     this.clauses.push(new Clause.From(tableName));
     return this;
   }
@@ -112,18 +112,18 @@ export class Query<T> {
     return this;
   }
 
-  join<U>(
+  join(
     type: JoinType,
-    table: string | Query<U>,
+    table: string | Query,
     left_col: string,
     operator: SqlOperators,
     right_col: string
-  ): Query<T & U> {
+  ): Query {
     this.clauses.push(
       new Clause.Join(type, table.toString()!, left_col, operator, right_col)
     );
 
-    return this as Query<T & U>;
+    return this;
   }
 
   groupBy(...fields: string[]) {
@@ -131,8 +131,8 @@ export class Query<T> {
     return this;
   }
 
-  static union(type: UnionType, ...queries: (string | Query<any>)[]) {
-    const query = new Query<any>(QueryType.SELECT);
+  static union(type: UnionType, ...queries: (string | Query)[]) {
+    const query = new Query(QueryType.SELECT);
     query.clauses.push(new Clause.Union(type, queries));
 
     return query;
@@ -172,14 +172,14 @@ export class Query<T> {
     );
   }
 
-  toArray(data?: any[]): Promise<T[]> {
+  toArray(data?: any[]): Promise<any[]> {
     if (this.type !== QueryType.SELECT)
       throw new Error("Cannot call toArray() on a non-select query");
 
     return new Promise((resolve, reject) =>
       dbConnection.query(this.toString()!, data ?? this.data, (err, result) => {
         if (err) reject(err);
-        else resolve(result as T[]);
+        else resolve(result as any[]);
       })
     );
   }

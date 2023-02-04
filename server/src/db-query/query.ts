@@ -46,9 +46,9 @@ enum QueryType {
   DELETE,
 }
 
-export class Query<T> {
+export class Query {
   private type: QueryType;
-  private clauses = [] as (Clause.Clause | Query<any>)[];
+  private clauses = [] as (Clause.Clause | Query)[];
   private data: any[];
   private alias: string;
 
@@ -57,7 +57,7 @@ export class Query<T> {
   }
 
   static select<T extends Entity>(...fields: string[]) {
-    const query = new Query<T>(QueryType.SELECT);
+    const query = new Query(QueryType.SELECT);
     if (fields.length === 0) fields.push("*");
     query.clauses.push(new Clause.SelectClause(fields));
     return query;
@@ -68,32 +68,32 @@ export class Query<T> {
     data: object,
     fields: string[] = Object.keys(data)
   ) {
-    const query = new Query<T>(QueryType.INSERT);
+    const query = new Query(QueryType.INSERT);
     query.clauses.push(new Clause.InsertClause(table, fields));
     query.data = fields.map((field) => data[field]);
     return query;
   }
 
   static update<T extends Entity>(table: T & typeof Entity) {
-    const query = new Query<T>(QueryType.UPDATE);
+    const query = new Query(QueryType.UPDATE);
     query.clauses.push(new Clause.UpdateClause(table));
     return query;
   }
 
   static delete<T extends Entity>() {
-    const query = new Query<T>(QueryType.DELETE);
+    const query = new Query(QueryType.DELETE);
     query.clauses.push(new Clause.DeleteClause());
     return query;
   }
 
-  static exists<T extends Entity>(innerQuery: Query<T>) {
-    const query = new Query<T>(QueryType.SELECT);
+  static exists<T extends Entity>(innerQuery: Query) {
+    const query = new Query(QueryType.SELECT);
     query.clauses.push(new Clause.SelectClause(["EXISTS"]));
     query.clauses.push(innerQuery);
     return query;
   }
 
-  from(table: typeof Entity | Query<T>) {
+  from(table: typeof Entity | Query) {
     this.clauses.push(new Clause.FromClause(table));
     return this;
   }
@@ -115,11 +115,11 @@ export class Query<T> {
 
   join<U extends Entity>(
     type: JoinType,
-    table: (U & typeof Entity) | Query<U>,
+    table: (U & typeof Entity) | Query,
     left_col: string,
     operator: SqlOperators,
     right_col: string
-  ): Query<T & U> {
+  ): Query {
     if (table instanceof Query)
       this.clauses.push(
         new Clause.JoinClause(
@@ -141,7 +141,7 @@ export class Query<T> {
         )
       );
 
-    return this as Query<T & U>;
+    return this as Query;
   }
 
   groupBy(...fields: string[]) {
@@ -149,8 +149,8 @@ export class Query<T> {
     return this;
   }
 
-  static union(type: UnionType, ...queries: Query<any>[]) {
-    const query = new Query<any>(QueryType.SELECT);
+  static union(type: UnionType, ...queries: Query[]) {
+    const query = new Query(QueryType.SELECT);
     query.clauses.push(new Clause.UnionClause(type, queries));
 
     return query;

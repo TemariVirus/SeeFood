@@ -1,5 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { authStore } from "$lib/stores/auth";
+  import { clientHandleApiError } from "$lib/responseHandlers";
   import LoginForm from "$lib/components/loginForm.svelte";
 
   function login(name: string, password: string) {
@@ -15,18 +17,11 @@
     }).then(async (response) => {
       if (response.ok) {
         const token = await response.json();
-        console.log(token);
+        $authStore.user = { name };
+        $authStore.token = token;
         goto("/");
       } else {
-        alert(
-          await response.json().then((data) => {
-            if (Array.isArray(data)) {
-              data = data[0];
-            }
-
-            return data.message ?? data;
-          })
-        );
+        clientHandleApiError(response);
       }
     });
 

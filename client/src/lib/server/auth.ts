@@ -1,34 +1,33 @@
 import { error } from "@sveltejs/kit";
 import HttpStatusCodes from "$lib/httpStatusCodes";
-import type { IUser } from "$lib/server/entities";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 
 const SECRET = randomUUID();
 
-export function generateLoginToken(user: IUser): string {
-  const token = jwt.sign(user, SECRET, { expiresIn: "1h" });
+export function generateLoginToken(userId: number): string {
+  const token = jwt.sign({ id: userId }, SECRET, { expiresIn: "1h" });
   return token;
 }
 
-export function verifyLoginToken(token: string): IUser {
+export function verifyLoginToken(token: string): number {
   try {
-    const user = jwt.verify(token, SECRET) as IUser;
-    return user;
+    const user = jwt.verify(token, SECRET) as { id: number };
+    return user.id!;
   } catch (err) {
-    console.log(err);
     if (err instanceof jwt.TokenExpiredError) {
       throw error(HttpStatusCodes.UNAUTHORIZED, "Token expired");
     }
     if (err instanceof jwt.JsonWebTokenError) {
       throw error(HttpStatusCodes.UNAUTHORIZED, "Invalid token");
     }
-
-    throw error(HttpStatusCodes.INTERNAL_SERVER_ERROR, "Unknown error");
+    
+    console.log("Error while verifying login token: ", err);
+    throw error(HttpStatusCodes.INTERNAL_SERVER_ERROR, "Unable to verify token");
   }
 }
 
-export function checkAuth(request: any) {
+export function checkAuth(request: any): number {
   const auth = request?.headers?.get("authorization")?.split(" ");
   if (!auth) {
     throw error(HttpStatusCodes.UNAUTHORIZED, "No authorization header found.");

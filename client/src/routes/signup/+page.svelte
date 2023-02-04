@@ -1,11 +1,10 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { authStore } from "$lib/stores/auth";
+  import { clientHandleApiError } from "$lib/responseHandlers";
   import LoginForm from "$lib/components/loginForm.svelte";
 
   function signUp(name: string, password: string) {
-    console.log("username: ", name);
-    console.log("password: ", password);
-
     fetch("/users", {
       method: "POST",
       headers: {
@@ -17,26 +16,40 @@
       }),
     }).then(async (response) => {
       if (response.ok) {
+        login(name, password);
         goto("/");
       } else {
-        alert(
-          await response.json().then((data) => {
-            if (Array.isArray(data)) {
-              data = data[0];
-            }
-
-            return data.message ?? data;
-          })
-        );
+        clientHandleApiError(response);
       }
     });
 
     return undefined;
   }
+
+  function login(name: string, password: string) {
+    fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        password,
+      }),
+    }).then(async (response) => {
+      if (response.ok) {
+        const token = await response.json();
+        authStore.set({ user: { name }, token });
+        goto("/");
+      } else {
+        goto("/login");
+      }
+    });
+  }
 </script>
 
 <section>
-    <div class="header-text">Sign Up</div>
+  <div class="header-text">Sign Up</div>
 
   <LoginForm btnText="Sign Up" handleLogin={signUp}>
     <p>Already have an account? <a href="/login">Log In</a></p>

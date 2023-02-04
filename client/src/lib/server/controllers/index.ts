@@ -1,26 +1,18 @@
-import { error } from "@sveltejs/kit";
-import HttpStatusCodes from "$lib/httpStatusCodes";
-import Query, { SqlOperators } from "$lib/server/db-query";
-
 import CategoryController from "./categoryController";
 import CommentController from "./commentController";
 import RestaurantCategoryController from "./restaurantCategoryController";
 import RestaurantController from "./restaurantController";
 import UserController from "./userController";
 
+import { error } from "@sveltejs/kit";
+import HttpStatusCodes from "$lib/httpStatusCodes";
+import Query, { SqlOperators } from "$lib/server/db-query";
 import type { z } from "zod";
 
-// Check if an id is valid and exists in the specified table
-export async function idExists(idString: any, table: string) {
-  // Ensure id is a number
-  const id =
-    typeof idString === "number" ? idString : Number.parseInt(idString);
+export function parseId(idString: number | string) {
+  const id = typeof idString === "number" ? idString : Number.parseInt(idString);
   if (!Number.isSafeInteger(id))
     throw error(HttpStatusCodes.BAD_REQUEST, "Invalid id.");
-
-  // Ensure entity exists
-  if (!(await exists(table, { id: id })))
-    throw error(HttpStatusCodes.NOT_FOUND, "Entity not found.");
 
   return id;
 }

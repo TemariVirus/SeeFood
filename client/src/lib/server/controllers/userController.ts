@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 import { generateLoginToken } from "$lib/server/auth";
-import { exists, handleZodParse } from ".";
+import { parseId, exists, handleZodParse } from ".";
 import Query, { SqlOperators } from "$lib/server/db-query";
 import type { IUser } from "$lib/server/entities";
 
@@ -58,6 +58,7 @@ export default class UserController {
 
   public static async addOne(user: any): Promise<boolean> {
     const data = handleZodParse(addUserRequest, user);
+
     // Ensure name is unique
     if (await exists(this.tableName, { name: data.name }))
       throw error(HttpStatusCodes.CONFLICT, "Name is already taken.");
@@ -67,16 +68,21 @@ export default class UserController {
     return (result as any).affectedRows === 1;
   }
 
-  public static async updateOne(id: number, user: any): Promise<boolean> {
+  public static async updateOne(
+    id: number | string,
+    user: any
+  ): Promise<boolean> {
+    id = parseId(id);
     const data = handleZodParse(updateUserRequest, user);
+
     // Ensure name is unique
     const nameExists = await Query.exists(
       Query.select()
         .from(this.tableName)
-        .where("name", SqlOperators.EQUAL, data.name)
-        .and("id", SqlOperators.NOT_EQUAL, id)
+        .where("name", SqlOperators.EQUAL)
+        .and("id", SqlOperators.NOT_EQUAL)
     )
-      .execute()
+      .execute([data.name, id])
       .then((exists) => (exists as any[])[0])
       .then((exists) => Object.values(exists)[0] === 1);
     if (data.name && nameExists)
@@ -85,16 +91,16 @@ export default class UserController {
     // Update user
     const result = await Query.update(this.tableName)
       .set(data)
-      .where("id", SqlOperators.EQUAL, id)
-      .execute();
+      .where("id", SqlOperators.EQUAL)
+      .execute([id]);
     return (result as any).affectedRows === 1;
   }
 
   public static async deleteOne(id: number): Promise<boolean> {
     const result = await Query.delete()
       .from(this.tableName)
-      .where("id", SqlOperators.EQUAL, id)
-      .execute();
+      .where("id", SqlOperators.EQUAL)
+      .execute([id]);
 
     return (result as any).affectedRows === 1;
   }
@@ -110,10 +116,10 @@ export default class UserController {
     }
 
     // Get user in database
-    const user = (await Query.select()
+    const user = (await Query.select("id", "password")
       .from(this.tableName)
-      .where("name", SqlOperators.EQUAL, credentials.name)
-      .toArray()
+      .where("name", SqlOperators.EQUAL)
+      .toArray([credentials.name])
       .then((users) => (users as any[])[0])) as IUser & { password: string };
 
     if (user === undefined)
@@ -129,9 +135,6 @@ export default class UserController {
         "Incorrect username or password."
       );
 
-    return generateLoginToken({
-      id: user.id,
-      name: user.name,
-    });
+    return generateLoginToken(user.id);
   }
 }

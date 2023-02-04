@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { store } from "$lib/authStore";
+  import { authStore } from "$lib/stores/auth";
   import guestPfp from "$lib/images/guest-pfp.svg";
 </script>
 
@@ -17,7 +17,7 @@
       </a>
       <a href="/profile">
         <button class="header-btn user-profile-btn" tabindex="-1">
-          <div id="username">{$store.user?.name ?? "Guest"}</div>
+          <div id="username">{$authStore.user?.name ?? "Guest"}</div>
           <img src={guestPfp} alt="Your profile" />
         </button>
       </a>

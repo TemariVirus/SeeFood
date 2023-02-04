@@ -7,9 +7,7 @@
 </script>
 
 <a href={link} class="item-card">
-  <div class="image-backdrop">
-    <img src={imageURL} alt="{altText}" class="card-image" />
-  </div>
+  <img src={imageURL} alt={altText} class="card-image" />
   <div class="secondary-text">{secondaryText}</div>
   <div class="primary-text">{primaryText}</div>
 </a>
@@ -33,18 +31,12 @@
     text-overflow: ellipsis;
   }
 
-  .image-backdrop {
-    width: 15.75rem;
-    height: 10.5rem;
-    background-color: #fff;
-    margin-bottom: 0.375rem;
-  }
-
   .card-image {
     width: 15.75rem;
     height: 10.5rem;
     object-fit: contain;
     object-position: center;
+    margin-bottom: 0.375rem;
   }
 
   .primary-text {

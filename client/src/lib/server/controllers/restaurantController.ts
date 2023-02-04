@@ -1,13 +1,10 @@
 import {
-  idExists,
+  parseId,
   CategoryController,
   RestaurantCategoryController,
   CommentController,
 } from ".";
-import Query, {
-  JoinType,
-  SqlOperators,
-} from "$lib/server/db-query";
+import Query, { JoinType, SqlOperators } from "$lib/server/db-query";
 import type { IRestaurant } from "$lib/server/entities";
 
 export default class RestaurantController {
@@ -71,37 +68,38 @@ export default class RestaurantController {
       SqlOperators.LIKE,
       `%${likeName}%`
     );
+
     return await query
       .toArray()
       .then((restaurants) => restaurants.map(this.entityToRestaurant));
   }
 
-  public static async getOne(idString: any): Promise<IRestaurant> {
-    const id = await idExists(idString, this.tableName);
+  public static async getOne(id: number | string): Promise<IRestaurant> {
+    id = parseId(id);
 
     return await this.selectQueryTemplate()
-      .where(`${this.tableName}.id`, SqlOperators.EQUAL, id)
-      .toArray()
+      .where("id", SqlOperators.EQUAL)
+      .toArray([id])
       .then((restaurants) => this.entityToRestaurant(restaurants[0]));
   }
 
   public static async getByCategoryId(
-    idString: any,
+    id: number | string,
     likeName: string = ""
   ): Promise<IRestaurant[]> {
-    const id = await idExists(idString, CategoryController.tableName);
+    id = parseId(id);
     const query = this.selectQueryTemplate()
       .where(
         "rc.restaurant_id",
         SqlOperators.IN,
         Query.select("restaurant_id")
           .from(RestaurantCategoryController.tableName)
-          .where("category_id", SqlOperators.EQUAL, id)
+          .where("category_id", SqlOperators.EQUAL)
       )
       .and("`name`", SqlOperators.LIKE, `%${likeName}%`);
 
     return await query
-      .toArray()
+      .toArray([id])
       .then((restaurants) => restaurants.map(this.entityToRestaurant));
   }
 }

@@ -21,7 +21,7 @@ export class Restaurant implements Entity {
   website?: string;
 
   static {
-    Query.prototype.toRestaurantArray = function (this: Query<any>) {
+    Query.prototype.toRestaurantArray = function (this: Query) {
       return this.toArray().then((restaurants) =>
         (restaurants as any[]).map((r) => {
           return {

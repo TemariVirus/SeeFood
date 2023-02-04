@@ -1,4 +1,4 @@
-import { idExists } from ".";
+import { parseId } from ".";
 import Query, { SqlOperators } from "$lib/server/db-query";
 import type { ICategory } from "$lib/server/entities";
 
@@ -20,13 +20,13 @@ export default class CategoryController {
       .then((categories) => categories.map(this.entityToCategory));
   }
 
-  public static async getOne(idString: string): Promise<ICategory> {
-    const id = await idExists(idString, this.tableName);
+  public static async getOne(id: number | string): Promise<ICategory> {
+    id = parseId(id);
 
     return await Query.select()
       .from(this.tableName)
-      .where("id", SqlOperators.EQUAL, id)
-      .toArray()
+      .where("id", SqlOperators.EQUAL)
+      .toArray([id])
       .then((categories) => this.entityToCategory(categories[0]));
   }
 }

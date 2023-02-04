@@ -1,23 +1,24 @@
 <script lang="ts">
   import { page } from "$app/stores";
+  import { authStore } from "$lib/stores/auth";
+  import type { IComment } from "$lib/server/entities";
+  import { clientHandleApiError } from "$lib/responseHandlers";
 
   import StarFull from "$lib/images/star-full.svg";
   import StarEmpty from "$lib/images/star-empty.svg";
+  import { goto } from "$app/navigation";
 
-  import type { IComment } from "$lib/server/entities";
-
-  export let comment: undefined | IComment = undefined;
+  export let comment: null | IComment = null;
   export let show = false;
 
   const isReply = comment?.isReply ?? false;
-  let newComment = comment
-    ? { ...comment }
-    : {
-        content: "",
-        rating: 0,
-        parent_id: Number.parseInt($page.params.id),
-        is_reply: false,
-      };
+  let newComment = {
+    content: "",
+    rating: 0,
+    parentId: Number.parseInt($page.params.id),
+    isReply: false,
+    ...comment,
+  };
 
   function cancel() {
     show = false;
@@ -27,51 +28,50 @@
     }
   }
 
-  function done() {}
-
-  // function done() {
-  //     if (comment) {
-  //       fetch(commentsPutUrl(comment.id, comment.isReply), {
-  //         method: "PUT",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: "Basic " + btoa("Admin:1234"),
-  //         },
-  //         body: JSON.stringify({
-  //           content: newComment.content?.trim(),
-  //           rating: newComment.rating,
-  //         }),
-  //       }).then(async (res) => {
-  //         if (res.ok) {
-  //           alert("Comment edited successfully");
-  //           // TODO: Refresh comments
-  //         } else {
-  //           const message = await res.json();
-  //           alert(message ?? "Error editing comment");
-  //         }isReply);
-  //     } else {
-  //       fetch(commentsPostUrl(newComment.is_reply), {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: "Basic " + btoa("Admin:1234"),
-  //         },
-  //         body: JSON.stringify({
-  //           content: newComment.content?.trim(),
-  //           rating: newComment.rating,
-  //           parent_id: newComment.parent_id,
-  //         }),
-  //       }).then(async (res) => {
-  //         if (res.ok) {
-  //           alert("Comment posted successfully");
-  //           // TODO: Refresh comments
-  //         } else {
-  //           const message = await res.json();
-  //           alert(message ?? "Error posting comment");
-  //         }
-  //       });
-  //     }
-  //   }
+  function done() {
+    if (comment) {
+      fetch(`/comments?isReply=${isReply}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + $authStore.token,
+        },
+        body: JSON.stringify({
+          content: newComment.content?.trim(),
+          rating: newComment.rating,
+        }),
+      }).then(async (res) => {
+        if (res.ok) {
+          alert("Comment edited successfully");
+          // TODO: Refresh comments
+        } else {
+          const message = await res.json();
+          alert(message ?? "Error editing comment");
+        }
+      });
+    } else {
+      fetch(`/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + $authStore.token,
+        },
+        body: JSON.stringify({
+          content: newComment.content?.trim(),
+          rating: newComment.rating,
+          parentId: newComment.parentId,
+          isReply: newComment.isReply,
+        }),
+      }).then(async (res) => {
+        if (res.ok) {
+          alert("Comment posted successfully");
+          goto($page.url);
+        } else {
+          clientHandleApiError(res);
+        }
+      });
+    }
+  }
 </script>
 
 <div class="container">
@@ -133,7 +133,7 @@
 
   .comment-text {
     width: 100%;
-    height: 10rem;
+    height: 8.5rem;
     margin-top: 0.5rem;
     padding: 0.5rem;
     border: 1px solid #333;
@@ -149,22 +149,5 @@
     flex-direction: row;
     justify-content: flex-end;
     margin-top: 0.5rem;
-  }
-
-  .form-btns button {
-    margin-left: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid #333;
-    border-radius: 0.25rem;
-    background-color: #333;
-    color: var(--text-color);
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  .form-btns button:hover {
-    background-color: #444;
-  }
-  .form-btns button:active {
-    background-color: #555;
   }
 </style>

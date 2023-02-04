@@ -92,7 +92,7 @@ export class DeleteClause extends Clause {
 export class FromClause extends Clause {
   private table: string;
 
-  constructor(table: typeof Entity | Query<any>) {
+  constructor(table: typeof Entity | Query) {
     super();
     this.table = table instanceof Query ? table.toString() : table.tableName;
   }
@@ -183,9 +183,9 @@ export class GroupByClause extends Clause {
 
 export class UnionClause extends Clause {
   private unionType: UnionType;
-  private tables: Query<any>[];
+  private tables: Query[];
 
-  constructor(unionType: UnionType, tables: Query<any>[]) {
+  constructor(unionType: UnionType, tables: Query[]) {
     super();
     this.unionType = unionType;
     this.tables = tables;

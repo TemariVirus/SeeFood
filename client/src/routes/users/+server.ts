@@ -9,15 +9,15 @@ export const POST = (async ({ request, params, url }: any) => {
 
   if (!success)
     throw error(HttpStatusCodes.INTERNAL_SERVER_ERROR, "Failed to add user.");
-
+    
   return json("Success", { status: HttpStatusCodes.CREATED });
 }) satisfies RequestHandler;
 
 export const PUT = (async ({ request, params, url }: any) => {
-  const user = checkAuth(request);
+  const userId = checkAuth(request);
 
   const data = await request.json();
-  const success = await UserController.updateOne(user.id, data);
+  const success = await UserController.updateOne(userId, data);
 
   if (!success)
     throw error(
@@ -29,9 +29,9 @@ export const PUT = (async ({ request, params, url }: any) => {
 }) satisfies RequestHandler;
 
 export const DELETE = (async ({ request, params, url }: any) => {
-  const user = checkAuth(request);
+  const userId = checkAuth(request);
 
-  const success = await UserController.deleteOne(user.id);
+  const success = await UserController.deleteOne(userId);
 
   if (!success)
     throw error(

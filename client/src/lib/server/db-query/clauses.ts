@@ -94,7 +94,7 @@ export class Delete extends Base {
 export class From extends Base {
   private table: string;
 
-  constructor(table: string | Query<any>) {
+  constructor(table: string | Query) {
     super();
     this.table = table.toString()!;
   }
@@ -185,9 +185,9 @@ export class GroupBy extends Base {
 
 export class Union extends Base {
   private unionType: UnionType;
-  private tables: (string | Query<any>)[];
+  private tables: (string | Query)[];
 
-  constructor(unionType: UnionType, tables: (string | Query<any>)[]) {
+  constructor(unionType: UnionType, tables: (string | Query)[]) {
     super();
     this.unionType = unionType;
     this.tables = [...tables];
