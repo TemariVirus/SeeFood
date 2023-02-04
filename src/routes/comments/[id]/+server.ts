@@ -1,14 +1,14 @@
 import { type RequestHandler, json, error } from "@sveltejs/kit";
 import { CommentController } from "$lib/server/controllers";
 import HttpStatusCodes from "$lib/httpStatusCodes";
-import { getTokenPayload } from "$lib/server/auth";
+import { getLoginToken } from "$lib/server/tokens";
 
 export const PUT = (async ({ request, params, url }: any) => {
-  const userId = getTokenPayload(request);
+  const token = getLoginToken(request);
 
   // Check that the user is the owner of the comment
   const comment = await CommentController.getOne(params.id, ["user_id"]);
-  if (comment.userId !== userId)
+  if (comment.userId !== token.userId)
     throw error(
       HttpStatusCodes.FORBIDDEN,
       "You are not the owner of this comment."
@@ -28,13 +28,13 @@ export const PUT = (async ({ request, params, url }: any) => {
 }) satisfies RequestHandler;
 
 export const DELETE = (async ({ request, params, url }: any) => {
-  const userId = getTokenPayload(request);
+  const token = getLoginToken(request);
 
   // Check that the user is the owner of the comment
   const comment = await CommentController.getOne(params.id, ["user_id"]);
   if (comment === undefined)
     throw error(HttpStatusCodes.NOT_FOUND, "Comment does not exist.");
-  if (comment.userId !== userId)
+  if (comment.userId !== token.userId)
     throw error(
       HttpStatusCodes.FORBIDDEN,
       "You are not the owner of this comment."

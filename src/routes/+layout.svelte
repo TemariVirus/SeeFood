@@ -1,6 +1,9 @@
 <script>
   import Header from "$lib/components/Header.svelte";
+  import { silentLogin } from "$lib/client/auth";
   import "./styles.css";
+
+  silentLogin();
 </script>
 
 <div class="app">

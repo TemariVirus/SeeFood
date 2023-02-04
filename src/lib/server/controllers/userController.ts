@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 import HttpStatusCodes from "$lib/httpStatusCodes";
-import { generateLoginToken } from "$lib/server/auth";
+import { lastTokenResets, generateLoginToken } from "$lib/server/tokens";
 import { parseId, exists, handleZodParse } from ".";
 import Query, { SqlOperators } from "$lib/server/db-query";
 import type { IUser } from "$lib/entities";
@@ -21,10 +21,11 @@ const addUserRequest = z
 upper case letter, decimal number, and non-alphanumeric character.",
     }),
   })
-  .transform((data) => {
-    data.password = hashSync(data.password, defaultRounds);
-    return data;
-  });
+  .transform((data) => ({
+    name: data.name,
+    password: hashSync(data.password, defaultRounds),
+    last_token_reset: new Date(),
+  }));
 
 const updateUserRequest = z
   .object({
@@ -42,21 +43,41 @@ upper case letter, decimal number, and non-alphanumeric character.",
     message: "At least one field must be provided.",
     path: [],
   })
-  .transform((data) => {
-    if (data.password) data.password = hashSync(data.password, defaultRounds);
-    return data;
-  });
+  .transform((data) => ({
+    name: data.name,
+    password: data.password
+      ? hashSync(data.password, defaultRounds)
+      : undefined,
+    last_token_reset: data.password ? new Date() : undefined,
+  }));
 
 const loginRequest = z.object({
   name: z.string().trim().min(1, "Username cannot be empty."),
   password: z.string().min(1, "Password cannot be empty."),
 });
 
+interface IUserApiResponse {
+  success: boolean;
+  token?: string;
+}
+
 export default class UserController {
   public static readonly tableName = "users";
   public static readonly defaultRounds = 10;
 
-  public static async addOne(user: any): Promise<boolean> {
+  public static async getName(id: number | string): Promise<string> {
+    id = parseId(id);
+    const result = await Query.select("name")
+      .from(this.tableName)
+      .where("id", SqlOperators.EQUAL)
+      .toArray([id]);
+
+    if (result.length === 0)
+      throw error(HttpStatusCodes.NOT_FOUND, "User not found.");
+    return result[0].name;
+  }
+
+  public static async addOne(user: any): Promise<IUserApiResponse> {
     const data = handleZodParse(addUserRequest, user);
 
     // Ensure name is unique
@@ -65,13 +86,20 @@ export default class UserController {
 
     // Create user
     const result = await Query.insert(this.tableName, data).execute();
-    return (result as any).affectedRows === 1;
+    if ((result as any).affectedRows !== 1) return { success: false };
+
+    const userId = (result as any).insertId;
+    lastTokenResets.set(userId, data.last_token_reset);
+    return {
+      success: true,
+      token: generateLoginToken(userId),
+    };
   }
 
   public static async updateOne(
     id: number | string,
     user: any
-  ): Promise<boolean> {
+  ): Promise<IUserApiResponse> {
     id = parseId(id);
     const data = handleZodParse(updateUserRequest, user);
 
@@ -90,26 +118,40 @@ export default class UserController {
         throw error(HttpStatusCodes.CONFLICT, "Name is already taken.");
     }
 
+    console.log(data);
+
     // Update user
     const result = await Query.update(this.tableName)
       .set(data)
       .where("id", SqlOperators.EQUAL, id)
       .execute();
-    return (result as any).affectedRows === 1;
+    if ((result as any).affectedRows !== 1) return { success: false };
+
+    if (data.password === undefined) return { success: true };
+
+    lastTokenResets.set(id, data.last_token_reset!);
+    return {
+      success: true,
+      token: generateLoginToken(id),
+    };
   }
 
-  public static async deleteOne(id: number): Promise<boolean> {
+  public static async deleteOne(id: number): Promise<IUserApiResponse> {
     const result = await Query.delete()
       .from(this.tableName)
       .where("id", SqlOperators.EQUAL)
       .execute([id]);
+    if ((result as any).affectedRows !== 1) {
+      return { success: false };
+    }
 
-    return (result as any).affectedRows === 1;
+    lastTokenResets.delete(id);
+    return { success: true };
   }
 
-  public static async getLoginToken(
+  public static async login(
     request: z.infer<typeof loginRequest>
-  ): Promise<string> {
+  ): Promise<IUserApiResponse> {
     let credentials;
     try {
       credentials = loginRequest.parse(request);
@@ -137,6 +179,9 @@ export default class UserController {
         "Incorrect username or password."
       );
 
-    return generateLoginToken(user.id);
+    return {
+      success: true,
+      token: generateLoginToken(user.id),
+    };
   }
 }

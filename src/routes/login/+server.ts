@@ -4,7 +4,11 @@ import HttpStatusCodes from "$lib/httpStatusCodes";
 
 export const POST = (async ({ request, params, url }: any) => {
   const body = await request.json();
-  const token = await UserController.getLoginToken(body);
+  const response = await UserController.login(body);
 
-  return json(token, { status: HttpStatusCodes.OK });
+  if (!response.success) {
+    return json("Failed to log in", { status: HttpStatusCodes.UNAUTHORIZED });
+  }
+
+  return json(response.token!, { status: HttpStatusCodes.OK });
 }) satisfies RequestHandler;

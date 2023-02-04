@@ -48,6 +48,10 @@ export function handleZodParse<T extends z.ZodType<any, any, any>>(
 ): z.infer<typeof parser> {
   try {
     const data = parser.parse(request);
+    // Remove undefined properties
+    Object.keys(data).forEach((key) => {
+      if (data[key] === undefined) delete data[key];
+    });
     return data;
   } catch (e: any) {
     if (e.issues) {

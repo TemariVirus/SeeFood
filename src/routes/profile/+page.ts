@@ -7,7 +7,7 @@ export const prerender = false;
 
 export const load = async () => {
   const { user, token } = get(authStore);
-  if (!user) throw redirect(HttpStatusCodes.FOUND, "/login");
+  if (!user || !token) throw redirect(HttpStatusCodes.FOUND, "/login");
 
   return user;
 };

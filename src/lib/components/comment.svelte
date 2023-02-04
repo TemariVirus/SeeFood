@@ -1,7 +1,7 @@
 <script lang="ts">
   import { authStore } from "$lib/stores/auth";
   import type { IComment } from "$lib/entities";
-  import { clientHandleApiError } from "$lib/responseHandlers";
+  import { handleApiError } from "$lib/client/responseHandlers";
 
   import guestPfp from "$lib/images/guest-pfp.svg";
   import starEmpty from "$lib/images/star-empty.svg";
@@ -24,11 +24,11 @@
         "Content-Type": "application/json",
         Authorization: `Bearer ${$authStore.token}`,
       },
-    }).then((res) => {
+    }).then(async (res) => {
       if (res.ok) {
         location.reload();
       } else {
-        clientHandleApiError(res);
+        await handleApiError(res);
       }
     });
   }

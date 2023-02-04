@@ -1,39 +1,47 @@
 import { type RequestHandler, json, error } from "@sveltejs/kit";
-import { getTokenPayload } from "$lib/server/auth";
+import { getLoginToken } from "$lib/server/tokens";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 import { UserController } from "$lib/server/controllers";
 
+export const GET = (async ({ request, params, url }: any) => {
+  const token = getLoginToken(request);
+
+  const name = await UserController.getName(token.userId);
+
+  return json({ name }, { status: HttpStatusCodes.OK });
+}) satisfies RequestHandler;
+
 export const POST = (async ({ request, params, url }: any) => {
   const data = await request.json();
-  const success = await UserController.addOne(data);
+  const response = await UserController.addOne(data);
 
-  if (!success)
+  if (!response.success)
     throw error(HttpStatusCodes.INTERNAL_SERVER_ERROR, "Failed to add user.");
 
-  return json("Success", { status: HttpStatusCodes.CREATED });
+  return json(response.token, { status: HttpStatusCodes.CREATED });
 }) satisfies RequestHandler;
 
 export const PUT = (async ({ request, params, url }: any) => {
-  const userId = getTokenPayload(request);
+  const token = getLoginToken(request);
 
   const data = await request.json();
-  const success = await UserController.updateOne(userId, data);
+  const response = await UserController.updateOne(token.userId, data);
 
-  if (!success)
+  if (!response.success)
     throw error(
       HttpStatusCodes.INTERNAL_SERVER_ERROR,
       "Failed to update user."
     );
 
-  return json("Success", { status: HttpStatusCodes.OK });
+  return json(response.token ?? "Success", { status: HttpStatusCodes.OK });
 }) satisfies RequestHandler;
 
 export const DELETE = (async ({ request, params, url }: any) => {
-  const userId = getTokenPayload(request);
+  const token = getLoginToken(request);
 
-  const success = await UserController.deleteOne(userId);
+  const response = await UserController.deleteOne(token.userId);
 
-  if (!success)
+  if (!response.success)
     throw error(
       HttpStatusCodes.INTERNAL_SERVER_ERROR,
       "Failed to delete user."

@@ -1,13 +1,13 @@
 import { type RequestHandler, json, error } from "@sveltejs/kit";
 import { CommentController } from "$lib/server/controllers";
 import HttpStatusCodes from "$lib/httpStatusCodes";
-import { getTokenPayload } from "$lib/server/auth";
+import { getLoginToken } from "$lib/server/tokens";
 
 export const POST = (async ({ request, params, url }: any) => {
-  const userId = getTokenPayload(request);
+  const token = getLoginToken(request);
 
   const data = await request.json();
-  data.userId = userId;
+  data.userId = token.userId;
 
   const success = await CommentController.addOne(data);
   if (!success)

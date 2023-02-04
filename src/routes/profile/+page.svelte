@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { logout as deleteToken } from "$lib/client/auth";
   import { authStore } from "$lib/stores/auth";
   import { goto } from "$app/navigation";
-  import { clientHandleApiError } from "$lib/responseHandlers";
+  import { handleApiError } from "$lib/client/responseHandlers";
   import guestPfp from "$lib/images/guest-pfp.svg";
 
   let name = $authStore.user!.name!;
@@ -15,12 +16,12 @@
         Authorization: `Bearer ${$authStore.token}`,
       },
       body: JSON.stringify({ name }),
-    }).then((response) => {
+    }).then(async (response) => {
       if (response.ok) {
         $authStore.user!.name = name;
         alert("Name changed successfully.");
       } else {
-        clientHandleApiError(response);
+        await handleApiError(response);
       }
     });
 
@@ -28,8 +29,7 @@
   }
 
   function logOut() {
-    $authStore.user = null;
-    $authStore.token = null;
+    deleteToken();
     goto("/login");
   }
 
@@ -40,11 +40,11 @@
         "Content-Type": "application/json",
         Authorization: `Bearer ${$authStore.token}`,
       },
-    }).then((response) => {
+    }).then(async (response) => {
       if (response.ok) {
         logOut();
       } else {
-        clientHandleApiError(response);
+        await handleApiError(response);
       }
     });
   }

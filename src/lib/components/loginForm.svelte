@@ -37,8 +37,6 @@
     align-items: center;
   }
 
-  
-
   input,
   button {
     width: 20rem;
@@ -55,7 +53,7 @@
     padding-left: 0.9375rem;
     padding-right: 0.9375rem;
   }
-  
+
   input:first-of-type {
     margin-bottom: 1.25rem;
   }

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { setAuthCookie } from "$lib/client/auth";
   import { authStore } from "$lib/stores/auth";
-  import { clientHandleApiError } from "$lib/responseHandlers";
+  import { handleApiError } from "$lib/client/responseHandlers";
   import LoginForm from "$lib/components/loginForm.svelte";
 
   function signUp(name: string, password: string) {
@@ -16,35 +17,16 @@
       }),
     }).then(async (response) => {
       if (response.ok) {
-        login(name, password);
+        const token = await response.json();
+        authStore.set({ user: { name }, token });
+        setAuthCookie(token);
         goto("/");
       } else {
-        clientHandleApiError(response);
+        await handleApiError(response);
       }
     });
 
     return undefined;
-  }
-
-  function login(name: string, password: string) {
-    fetch("/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        password,
-      }),
-    }).then(async (response) => {
-      if (response.ok) {
-        const token = await response.json();
-        authStore.set({ user: { name }, token });
-        goto("/");
-      } else {
-        goto("/login");
-      }
-    });
   }
 </script>
 

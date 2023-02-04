@@ -27,7 +27,7 @@
       <p class="text-center text-l">No comments</p>
     {:else}
       {#each comments as comment}
-        <Comment comment={comment} />
+        <Comment {comment} />
       {/each}
     {/if}
   </div>

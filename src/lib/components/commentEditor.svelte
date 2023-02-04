@@ -2,7 +2,7 @@
   import { page } from "$app/stores";
   import { authStore } from "$lib/stores/auth";
   import type { IComment } from "$lib/entities";
-  import { clientHandleApiError } from "$lib/responseHandlers";
+  import { handleApiError } from "$lib/client/responseHandlers";
 
   import StarFull from "$lib/images/star-full.svg";
   import StarEmpty from "$lib/images/star-empty.svg";
@@ -28,8 +28,8 @@
   }
 
   function done() {
-    fetch(`/comments/${comment ? comment.id : ""}`, {
-      method: comment ? "PUT" : "POST",
+    fetch(`/comments${comment ? "/" + comment.id : ""}`, {
+      method: comment !== null ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + $authStore.token,
@@ -40,11 +40,12 @@
         parentId: newComment.parentId,
         isReply: newComment.isReply,
       }),
-    }).then((res) => {
+    }).then(async (res) => {
+      console.log(res);
       if (res.ok) {
         location.reload();
       } else {
-        clientHandleApiError(res);
+        await handleApiError(res);
       }
     });
   }
