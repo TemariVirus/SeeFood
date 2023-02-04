@@ -1,6 +1,6 @@
 import { parseId } from ".";
 import Query, { SqlOperators } from "$lib/server/db-query";
-import type { ICategory } from "$lib/server/entities";
+import type { ICategory } from "$lib/entities";
 
 export default class CategoryController {
   public static readonly tableName = "categories";

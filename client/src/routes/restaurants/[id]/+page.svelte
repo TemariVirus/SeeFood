@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import type { IRestaurant } from "$lib/server/entities";
+  import type { IRestaurant } from "$lib/entities";
   import RestaurantInfo from "$lib/components/restaurantInfo.svelte";
 
   export let data: IRestaurant;

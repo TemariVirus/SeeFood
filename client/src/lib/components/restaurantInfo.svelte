@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { IRestaurant } from "$lib/server/entities";
+  import type { IRestaurant } from "$lib/entities";
 
   export let restaurant: IRestaurant;
 </script>

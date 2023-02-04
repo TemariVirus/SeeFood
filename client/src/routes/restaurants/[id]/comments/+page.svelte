@@ -1,7 +1,7 @@
 <script lang="ts">
   import CommentEditor from "$lib/components/commentEditor.svelte";
   import Comment from "$lib/components/comment.svelte";
-  import type { IRestaurant, IComment } from "$lib/server/entities";
+  import type { IRestaurant, IComment } from "$lib/entities";
   import RestaurantInfo from "$lib/components/restaurantInfo.svelte";
 
   export let data: {
@@ -27,7 +27,7 @@
       <p class="text-center text-l">No comments</p>
     {:else}
       {#each comments as comment}
-        <Comment data={comment} />
+        <Comment comment={comment} />
       {/each}
     {/if}
   </div>

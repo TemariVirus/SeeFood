@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import type { IRestaurant, ICategory } from "$lib/server/entities";
+  import type { IRestaurant, ICategory } from "$lib/entities";
   import fish from "$lib/images/fish.png";
   import SearchBar from "$lib/components/SearchBar.svelte";
   import ItemCard from "$lib/components/ItemCard.svelte";

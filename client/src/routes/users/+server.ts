@@ -1,5 +1,5 @@
 import { type RequestHandler, json, error,  } from "@sveltejs/kit";
-import { checkAuth } from "$lib/server/auth";
+import { getTokenPayload } from "$lib/server/auth";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 import { UserController } from "$lib/server/controllers";
 
@@ -14,7 +14,7 @@ export const POST = (async ({ request, params, url }: any) => {
 }) satisfies RequestHandler;
 
 export const PUT = (async ({ request, params, url }: any) => {
-  const userId = checkAuth(request);
+  const userId = getTokenPayload(request);
 
   const data = await request.json();
   const success = await UserController.updateOne(userId, data);
@@ -29,7 +29,7 @@ export const PUT = (async ({ request, params, url }: any) => {
 }) satisfies RequestHandler;
 
 export const DELETE = (async ({ request, params, url }: any) => {
-  const userId = checkAuth(request);
+  const userId = getTokenPayload(request);
 
   const success = await UserController.deleteOne(userId);
 

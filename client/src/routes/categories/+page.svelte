@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ICategory } from "$lib/server/entities";
+  import type { ICategory } from "$lib/entities";
   import fish from "$lib/images/fish.png";
   import ItemCard from "$lib/components/ItemCard.svelte";
 

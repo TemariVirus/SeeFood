@@ -5,7 +5,7 @@ import {
   CommentController,
 } from ".";
 import Query, { JoinType, SqlOperators } from "$lib/server/db-query";
-import type { IRestaurant } from "$lib/server/entities";
+import type { IRestaurant } from "$lib/entities";
 
 export default class RestaurantController {
   public static readonly tableName = "restaurants";
@@ -37,7 +37,8 @@ export default class RestaurantController {
           "AVG(rating) as rating",
           "COUNT(rating) as reviewCount"
         )
-          .from(CommentController.ReviewTableName)
+          .from(CommentController.tableName)
+          .where("rating", SqlOperators.IS_NOT, null)
           .groupBy("restaurant_id")
           .as("r"),
         `${this.tableName}.id`,

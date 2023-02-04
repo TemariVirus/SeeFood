@@ -28,6 +28,8 @@ export abstract class Compare extends Base {
       );
       value = `(${value.join(",")})`;
     }
+    // If value is null, use NULL
+    if (value === null) value = "NULL";
     // If value is undefined, use a placeholder
     this.value =
       value ??

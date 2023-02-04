@@ -10,7 +10,7 @@ export function generateLoginToken(userId: number): string {
   return token;
 }
 
-export function verifyLoginToken(token: string): number {
+export function decryptToken(token: string): number {
   try {
     const user = jwt.verify(token, SECRET) as { id: number };
     return user.id!;
@@ -27,7 +27,7 @@ export function verifyLoginToken(token: string): number {
   }
 }
 
-export function checkAuth(request: any): number {
+export function getTokenPayload(request: any): number {
   const auth = request?.headers?.get("authorization")?.split(" ");
   if (!auth) {
     throw error(HttpStatusCodes.UNAUTHORIZED, "No authorization header found.");
@@ -39,5 +39,5 @@ export function checkAuth(request: any): number {
     );
   }
 
-  return verifyLoginToken(auth[1]);
+  return decryptToken(auth[1]);
 }

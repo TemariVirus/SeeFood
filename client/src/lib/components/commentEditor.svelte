@@ -1,12 +1,12 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { authStore } from "$lib/stores/auth";
-  import type { IComment } from "$lib/server/entities";
+  import type { IComment } from "$lib/entities";
   import { clientHandleApiError } from "$lib/responseHandlers";
 
   import StarFull from "$lib/images/star-full.svg";
   import StarEmpty from "$lib/images/star-empty.svg";
-  import { goto } from "$app/navigation";
+  import { invalidate } from "$app/navigation";
 
   export let comment: null | IComment = null;
   export let show = false;
@@ -30,7 +30,7 @@
 
   function done() {
     if (comment) {
-      fetch(`/comments?isReply=${isReply}`, {
+        fetch(`/comments/${comment.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -62,10 +62,9 @@
           parentId: newComment.parentId,
           isReply: newComment.isReply,
         }),
-      }).then(async (res) => {
+      }).then((res) => {
         if (res.ok) {
-          alert("Comment posted successfully");
-          goto($page.url);
+          location.reload();
         } else {
           clientHandleApiError(res);
         }

@@ -1,4 +1,4 @@
-import type { IUser } from "$lib/server/entities";
+import type { IUser } from "$lib/entities";
 import { writable } from "svelte/store";
 
 export const authStore = writable({

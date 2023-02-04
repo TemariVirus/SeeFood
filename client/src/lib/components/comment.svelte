@@ -1,6 +1,7 @@
 <script lang="ts">
   import { authStore } from "$lib/stores/auth";
-  import type { IComment } from "$lib/server/entities";
+  import type { IComment } from "$lib/entities";
+  import { clientHandleApiError } from "$lib/responseHandlers";
 
   import guestPfp from "$lib/images/guest-pfp.svg";
   import starEmpty from "$lib/images/star-empty.svg";
@@ -9,55 +10,69 @@
   import deleteIcon from "$lib/images/delete.svg";
   import CommentEditor from "$lib/components/commentEditor.svelte";
 
-  export let data: IComment;
+  export let comment: IComment;
   let showEditor = false;
-  
+
   function editComment() {
     showEditor = true;
   }
 
-  function deleteComment() {}
+  function deleteComment() {
+    fetch(`/comments/${comment.id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${$authStore.token}`,
+      },
+    }).then((res) => {
+      if (res.ok) {
+        location.reload();
+      } else {
+        clientHandleApiError(res);
+      }
+    });
+  }
 </script>
 
-{#if data.content}
-  <div class="comment {data.isReply ? 'reply' : ''}">
+{#if comment.content}
+  <div class="comment {comment.isReply ? 'reply' : ''}">
     <div style="display: flex;">
       <img
         src={guestPfp}
-        alt="{data.userName}'s profile"
+        alt="{comment.userName}'s profile"
         class="profile-picture"
       />
       <div class="align-row">
-        <p class="text-m">{data.userName}</p>
-        <p class="text-s">{new Date(data.date).toDateString()}</p>
-        {#if $authStore.user?.name === data.userName}
-        <div class="btn-container">
-          <button on:click={editComment}>
-            <img src={editIcon} alt="Edit" class="btn-icon" />
-          </button>
-          <button on:click={deleteComment}>
-            <img src={deleteIcon} alt="Delete" class="btn-icon" />
-          </button>
-        </div>
+        <p class="text-m">{comment.userName}</p>
+        <p class="text-s">{new Date(comment.date).toDateString()}</p>
+        {#if $authStore.user?.name === comment.userName}
+          <div class="btn-container">
+            <button on:click={editComment}>
+              <img src={editIcon} alt="Edit" class="btn-icon" />
+            </button>
+            <button on:click={deleteComment}>
+              <img src={deleteIcon} alt="Delete" class="btn-icon" />
+            </button>
+          </div>
         {/if}
       </div>
     </div>
 
     {#if showEditor}
-      <CommentEditor comment={data} bind:show={showEditor} />
+      <CommentEditor {comment} bind:show={showEditor} />
     {:else}
-      {#if data.rating !== undefined}
+      {#if comment.rating !== undefined}
         <div class="star-container">
           {#each Array.from({ length: 5 }) as _, i}
             <img
-              src={i < data.rating ? starFull : starEmpty}
-              alt={i < data.rating ? "Full star" : "Empty star"}
+              src={i < comment.rating ? starFull : starEmpty}
+              alt={i < comment.rating ? "Full star" : "Empty star"}
               class="star"
             />
           {/each}
         </div>
       {/if}
-      <div class="mt-1 long-text">{data.content}</div>
+      <div class="mt-1 long-text">{comment.content}</div>
     {/if}
   </div>
 {/if}

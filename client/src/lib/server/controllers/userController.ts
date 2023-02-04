@@ -3,7 +3,7 @@ import HttpStatusCodes from "$lib/httpStatusCodes";
 import { generateLoginToken } from "$lib/server/auth";
 import { parseId, exists, handleZodParse } from ".";
 import Query, { SqlOperators } from "$lib/server/db-query";
-import type { IUser } from "$lib/server/entities";
+import type { IUser } from "$lib/entities";
 
 import { hashSync, compareSync } from "bcrypt";
 import { z } from "zod";
@@ -91,8 +91,8 @@ export default class UserController {
     // Update user
     const result = await Query.update(this.tableName)
       .set(data)
-      .where("id", SqlOperators.EQUAL)
-      .execute([id]);
+      .where("id", SqlOperators.EQUAL, id)
+      .execute();
     return (result as any).affectedRows === 1;
   }
 
