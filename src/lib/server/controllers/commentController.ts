@@ -101,35 +101,40 @@ export default class CommentController {
       return comments.map(CommentController.entityToComment);
     };
 
+    // Everything in the below function except .sort() runs in linear time, so
+    // by using another sorting algorithm, this could be made to run in O(n)
+    // time. But that would only show a difference for large numbers of
+    // comments, at which point it would be better to only query a few
+    // comments at a time, and then load more as the user scrolls down, instead
+    // of loading all of them at once.
     Array.prototype.groupComments = function () {
-      // Sort by latest first
-      this.sort((a, b) => b.date.valueOf() - a.date.valueOf());
+      // Sort by latest first (Reversing the array beforehand creates the
+      // illusion of sub-day sorting precision without storing the time in the
+      // database, as rows in MySQL are usually returned in the order that they
+      // are inserted in, though this is not guaranteed. As such, the order of
+      // comments on the same day is undefined, but doing this will increase
+      // the chance that they will be sorted by time of insertion, which would
+      // look nicer should a user post multiple replies in a row.)
+      this.reverse().sort((a, b) => b.date.valueOf() - a.date.valueOf());
 
-      const reviews = this.filter((c) => !c.isReply && c.content !== undefined);
-      // Sort replies by parent id to easily split them
-      // (Satble sort is guarenteed on ECMAScript 2019 and above)
-      const replies = this.filter((c) => c.isReply)
-        .reverse() // Reverse so that replies are by earliest first
-        .sort((a, b) => a.reviewId! - b.reviewId!);
+      const reviews = this.filter((c) => !c.isReply);
+      // Reverse so that replies are by earliest first
+      const replies = this.filter((c) => c.isReply).reverse();
 
-      // Get array of indices where parent id changes
-      const splits = replies.reduce((acc, reply, i) => {
-        if (replies[i - 1]?.reviewId !== reply.reviewId) acc.push(i);
-        return acc;
-      }, [] as number[]);
-      splits.push(replies.length);
+      // Group replies by their parent review
+      const groupedReplies = replies.reduce((groups, reply) => {
+        if (groups.has(reply.reviewId!)) {
+          groups.get(reply.reviewId!)!.push(reply);
+        } else {
+          groups.set(reply.reviewId!, [reply]);
+        }
+        return groups;
+      }, new Map<number, IComment[]>());
 
-      // Group replies with their parent review
-      let j = 0;
-      return reviews.map((review) => {
-        return {
-          review,
-          replies:
-            replies[splits[j]]?.reviewId === review.id
-              ? replies.slice(splits[j], splits[++j])
-              : [],
-        };
-      }, []);
+      return reviews.map((review) => ({
+        review,
+        replies: groupedReplies.get(review.id) ?? [],
+      }));
     };
   }
 
@@ -191,6 +196,7 @@ export default class CommentController {
     review: z.infer<typeof newCommentRequest> & { restaurant_id: number }
   ): Promise<boolean> {
     // Check if restaurant exists and if user has already reviewed it
+    // (Slightly hacky as the query class wasn't designed for this kind of query)
     const restaurantCheck = Query.select(
       "EXISTS " +
         Query.select()

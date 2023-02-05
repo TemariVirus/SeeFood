@@ -9,10 +9,10 @@
   import editIcon from "$lib/images/edit.svg";
   import deleteIcon from "$lib/images/delete.svg";
   import CommentEditor from "$lib/components/commentEditor.svelte";
-  
+
   export let comment: IComment;
   let reply = {
-    content: `@${comment.userName} `,
+    content: comment.isReply ? `@${comment.userName} ` : "",
     rating: undefined,
     parentId: comment.reviewId ?? comment.id,
     isReply: true,
@@ -45,54 +45,59 @@
   }
 </script>
 
-{#if comment.content}
-  <div class="comment {comment.isReply ? 'reply' : ''}">
-    <div style="display: flex;">
-      <img
-        src={guestPfp}
-        alt="{comment.userName}'s profile"
-        class="profile-picture"
-      />
-      <div class="align-row">
-        <p class="text-m">{comment.userName}</p>
-        <p class="text-s">{new Date(comment.date).toDateString()}</p>
-        {#if $authStore.user?.name === comment.userName && !showReplyEditor}
-          <div class="btn-container">
+<div class="comment {comment.isReply ? 'reply' : ''}">
+  <div style="display: flex;">
+    <img
+      src={guestPfp}
+      alt="{comment.userName}'s profile"
+      class="profile-picture"
+    />
+    <div class="align-row">
+      <p class="text-m">{comment.userName}</p>
+      <p class="text-s">{new Date(comment.date).toDateString()}</p>
+      {#if $authStore.user?.name === comment.userName && !showReplyEditor}
+        <div class="btn-container">
+          {#if comment.content}
             <button class="btn-icon" on:click={editComment}>
               <img src={editIcon} alt="Edit" />
             </button>
-            <button class="btn-icon" on:click={deleteComment}>
-              <img src={deleteIcon} alt="Delete" />
-            </button>
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    {#if showCommentEditor}
-      <CommentEditor {comment} bind:show={showCommentEditor} edit={true} />
-    {:else}
-      {#if comment.rating !== undefined}
-        <div class="star-container">
-          {#each Array.from({ length: 5 }) as _, i}
-            <img
-              src={i < comment.rating ? starFull : starEmpty}
-              alt={i < comment.rating ? "Full star" : "Empty star"}
-              class="star"
-            />
-          {/each}
+          {/if}
+          <button class="btn-icon" on:click={deleteComment}>
+            <img src={deleteIcon} alt="Delete" />
+          </button>
         </div>
       {/if}
-      <div class="mt-1 long-text">{comment.content}</div>
-    {/if}
-    {#if !showCommentEditor && !showReplyEditor}
-      <button class="reply-btn" on:click={addReply}>Reply</button>
-    {/if}
-    {#if showReplyEditor}
-      <CommentEditor comment={reply} bind:show={showReplyEditor} edit={false} />
-    {/if}
+    </div>
   </div>
-{/if}
+
+  {#if comment.content && showCommentEditor}
+    <CommentEditor {comment} bind:show={showCommentEditor} edit={true} />
+  {:else}
+    {#if comment.rating !== undefined}
+      <div class="star-container">
+        {#each Array(5) as _, i}
+          <img
+            src={i < comment.rating ? starFull : starEmpty}
+            alt={i < comment.rating ? "Full star" : "Empty star"}
+            class="star"
+          />
+        {/each}
+      </div>
+    {/if}
+    {#if comment.content}
+      <div class="mt-1 long-text">{comment.content}</div>
+      {#if showReplyEditor}
+        <CommentEditor
+          comment={reply}
+          bind:show={showReplyEditor}
+          edit={false}
+        />
+      {:else}
+        <button class="reply-btn" on:click={addReply}>Reply</button>
+      {/if}
+    {/if}
+  {/if}
+</div>
 
 <style>
   .comment:not(:first-child) {
