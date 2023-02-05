@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
   import { authStore } from "$lib/stores/auth";
   import { handleApiError } from "$lib/client/responseHandlers";
   import StarFull from "$lib/images/star-full.svg";
@@ -18,6 +19,14 @@
     ...comment,
   };
 
+  function setRating(rating: number) {
+    if ($authStore.user === null || $authStore.token === null) {
+      goto("/login");
+      return;
+    }
+    newComment.rating = rating;
+  }
+
   function cancel() {
     show = false;
     if (!comment) {
@@ -27,6 +36,11 @@
   }
 
   function done() {
+    if ($authStore.user === null || $authStore.token === null) {
+      goto("/login");
+      return;
+    }
+
     fetch(`/comments${edit ? "/" + comment.id : ""}`, {
       method: edit ? "PUT" : "POST",
       headers: {
@@ -60,8 +74,7 @@
             class="star"
             src={StarFull}
             alt="Full star"
-            on:click={() =>
-              (newComment.rating = newComment.rating == star ? 0 : star)}
+            on:click={() => setRating(newComment.rating == star ? 0 : star)}
           />
         {:else}
           <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -69,7 +82,7 @@
             class="star"
             src={StarEmpty}
             alt="Empty star"
-            on:click={() => (newComment.rating = star)}
+            on:click={() => setRating(star)}
           />
         {/if}
       {/each}
@@ -80,6 +93,11 @@
     class="comment-text"
     placeholder="Write a comment..."
     bind:value={newComment.content}
+    on:focus={() => {
+      if ($authStore.user === null || $authStore.token === null) {
+        goto("/login");
+      }
+    }}
   />
   <div class="form-btns">
     <button on:click={cancel}>Cancel</button>

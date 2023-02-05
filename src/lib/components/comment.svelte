@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import { authStore } from "$lib/stores/auth";
   import type { IComment } from "$lib/entities";
   import { handleApiError } from "$lib/client/responseHandlers";
@@ -41,6 +42,10 @@
   }
 
   function addReply() {
+    if ($authStore.user === null || $authStore.token === null) {
+      goto("/login");
+      return;
+    }
     showReplyEditor = true;
   }
 </script>
