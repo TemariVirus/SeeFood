@@ -4,6 +4,8 @@ import Cookies from "js-cookie";
 
 const AUTH_COOKIE_NAME = "SeeFood-login-JWT";
 
+const loginCallbacks = [] as (() => void)[];
+
 export function getAuthCookie() {
   return Cookies.get(AUTH_COOKIE_NAME);
 }
@@ -20,14 +22,21 @@ export function removeAuthCookie() {
   Cookies.remove(AUTH_COOKIE_NAME);
 }
 
+export function onCheckCredentials(handler: () => void) {
+  loginCallbacks.push(handler);
+
+  return {
+    destroy: () => {
+      loginCallbacks.splice(loginCallbacks.indexOf(handler), 1);
+    },
+  };
+}
+
 export async function silentLogin(): Promise<boolean> {
   const token = get(authStore).token ?? getAuthCookie();
 
   if (!token) {
-    authStore.set({
-      user: null,
-      token: null,
-    });
+    logout();
     return false;
   }
 
@@ -45,6 +54,12 @@ export async function silentLogin(): Promise<boolean> {
         },
         token,
       });
+    } else {
+      logout();
+    }
+
+    for (const callback of loginCallbacks) {
+      callback();
     }
     return res.ok;
   });

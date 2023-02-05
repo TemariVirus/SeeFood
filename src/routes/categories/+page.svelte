@@ -25,12 +25,3 @@
     {/each}
   </div>
 </section>
-
-<style>
-  #main-banner {
-    width: 100vw;
-    height: 11.25rem;
-    object-fit: cover;
-    object-position: center;
-  }
-</style>

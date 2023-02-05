@@ -1,14 +1,13 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import { authStore } from "$lib/stores/auth";
-  import type { IComment } from "$lib/entities";
   import { handleApiError } from "$lib/client/responseHandlers";
-
   import StarFull from "$lib/images/star-full.svg";
   import StarEmpty from "$lib/images/star-empty.svg";
 
-  export let comment: null | IComment = null;
+  export let comment: any = null;
   export let show = false;
+  export let edit = false;
 
   const isReply = comment?.isReply ?? false;
   let newComment = {
@@ -28,8 +27,8 @@
   }
 
   function done() {
-    fetch(`/comments${comment ? "/" + comment.id : ""}`, {
-      method: comment !== null ? "PUT" : "POST",
+    fetch(`/comments${edit ? "/" + comment.id : ""}`, {
+      method: edit ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + $authStore.token,

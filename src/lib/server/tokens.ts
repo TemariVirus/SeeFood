@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 
 export type TokenPayload = {
   userId: number;
-  issueTime: Date;
+  issueTime: number;
 };
 
 const SECRET = randomUUID();
@@ -16,7 +16,7 @@ export function generateLoginToken(userId: number): string {
   return jwt.sign(
     {
       userId: userId,
-      issueTime: new Date(),
+      issueTime: Date.now(),
     } satisfies TokenPayload,
     SECRET,
     {
@@ -46,7 +46,7 @@ export function verifyToken(token: string): TokenPayload {
   }
 
   const lastReset = lastTokenResets.get(payload.userId);
-  if (lastReset && lastReset > payload.issueTime) {
+  if (lastReset && lastReset.valueOf() > payload.issueTime) {
     throw error(HttpStatusCodes.UNAUTHORIZED, "Token expired.");
   }
 

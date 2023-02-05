@@ -83,6 +83,13 @@ button {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+#main-banner {
+  width: 100vw;
+  height: 11.25rem;
+  object-fit: cover;
+  object-position: center;
+}
+
 .form-btns button {
   margin-left: 0.5rem;
   padding: 0.5rem 1rem;

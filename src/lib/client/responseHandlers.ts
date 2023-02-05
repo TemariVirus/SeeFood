@@ -1,3 +1,4 @@
+import { goto } from "$app/navigation";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 import { logout } from "$lib/client/auth";
 
@@ -13,5 +14,6 @@ export async function handleApiError(response: Response) {
 
   if (response.status === HttpStatusCodes.UNAUTHORIZED) {
     logout();
+    goto("/login");
   }
 }

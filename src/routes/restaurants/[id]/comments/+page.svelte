@@ -20,7 +20,7 @@
 </svelte:head>
 
 <RestaurantInfo {restaurant}>
-  <CommentEditor />
+  <CommentEditor edit={false} />
 
   <div class="comment-container">
     {#if comments.length === 0}

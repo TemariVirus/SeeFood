@@ -2,7 +2,7 @@ import { error } from "@sveltejs/kit";
 import HttpStatusCodes from "$lib/httpStatusCodes";
 import { lastTokenResets, generateLoginToken } from "$lib/server/tokens";
 import { parseId, exists, handleZodParse } from ".";
-import Query, { SqlOperators } from "$lib/server/db-query";
+import Query, { JoinType, SqlOperators } from "$lib/server/db-query";
 import type { IUser } from "$lib/entities";
 
 import { hashSync, compareSync } from "bcrypt";
@@ -30,6 +30,7 @@ upper case letter, decimal number, and non-alphanumeric character.",
 const updateUserRequest = z
   .object({
     name: z.string().trim().min(1, "Username cannot be empty.").optional(),
+    oldPassword: z.string().optional(),
     password: z
       .string()
       .regex(passwordRegex, {
@@ -39,12 +40,17 @@ upper case letter, decimal number, and non-alphanumeric character.",
       })
       .optional(),
   })
-  .refine((data) => data.name || data.password, {
+  .refine((data) => Object.values(data).filter((v) => v).length > 0, {
     message: "At least one field must be provided.",
     path: [],
   })
+  .refine((data) => !!(data.oldPassword || !data.password), {
+    message: "Old password must be provided to change password.",
+    path: ["oldPassword"],
+  })
   .transform((data) => ({
     name: data.name,
+    oldPassword: data.oldPassword,
     password: data.password
       ? hashSync(data.password, defaultRounds)
       : undefined,
@@ -103,22 +109,35 @@ export default class UserController {
     id = parseId(id);
     const data = handleZodParse(updateUserRequest, user);
 
-    // Ensure name is unique
-    if (data.name !== undefined) {
-      const nameExists = await Query.exists(
-        Query.select()
-          .from(this.tableName)
-          .where("name", SqlOperators.EQUAL)
-          .and("id", SqlOperators.NOT_EQUAL)
-      )
-        .execute([data.name, id])
-        .then((exists) => (exists as any[])[0])
-        .then((exists) => Object.values(exists)[0] === 1);
-      if (data.name && nameExists)
-        throw error(HttpStatusCodes.CONFLICT, "Name is already taken.");
-    }
+    // Ensure name is unique and old password is correct
+    if (data.name || data.password) {
+      const check = await Query.select("`password`, nameExists")
+        .from(this.tableName)
+        .join(
+          JoinType.JOIN,
+          Query.exists(
+            Query.select()
+              .from(this.tableName)
+              .where("name", SqlOperators.EQUAL)
+              .and("id", SqlOperators.NOT_EQUAL)
+              .as("nameExists")
+          ).as("a"),
+          "1",
+          SqlOperators.EQUAL,
+          "1"
+        )
+        .where("id", SqlOperators.EQUAL)
+        .toArray([data.name, id, id])
+        .then((result) => result[0]);
 
-    console.log(data);
+      if (!check) throw error(HttpStatusCodes.NOT_FOUND, "User not found.");
+      if (check.nameExists)
+        throw error(HttpStatusCodes.CONFLICT, "Name is already taken.");
+      if (data.oldPassword && !compareSync(data.oldPassword, check.password))
+        throw error(HttpStatusCodes.UNAUTHORIZED, "Incorrect password.");
+
+      delete data.oldPassword;
+    }
 
     // Update user
     const result = await Query.update(this.tableName)
@@ -127,6 +146,7 @@ export default class UserController {
       .execute();
     if ((result as any).affectedRows !== 1) return { success: false };
 
+    // No password change, return success
     if (data.password === undefined) return { success: true };
 
     lastTokenResets.set(id, data.last_token_reset!);
